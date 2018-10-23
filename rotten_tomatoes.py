@@ -3,19 +3,26 @@ import requests
 
 from parsel import Selector
 
+from logger import logger
+
 
 def get_first_google_result(query):
-    resp = requests.get('https://www.google.com/search', params={'q': query})
-    sel = Selector(text=resp.text)
-    css_text = sel.css('.g:nth-child(1) .r'). \
-        css('a::attr(href)').extract_first()
-    return re.findall('(https://\S*)/&', css_text)[0]
+    try:
+        resp = requests.get('https://www.google.com/search', params={'q': query})
+        sel = Selector(text=resp.text)
+        css_text = sel.css('.g:nth-child(1) .r'). \
+            css('a::attr(href)').extract_first()
+        return re.findall('(https://\S*)[%|/]', css_text)[0]
+    except Exception as e:
+        logger.exception(str(e))
+        logger.error(f'failed on query: {query}, got css_text: {css_text}')
 
 
 class RTScraper:
 
-    def __init__(self, movie_name):
+    def __init__(self, movie_name, year):
         self.movie_name = movie_name
+        self.year = year
         self.rt_url = None
 
     def get_ratings(self):
@@ -24,7 +31,7 @@ class RTScraper:
         return self.format_results()
 
     def get_rt_url_from_google(self):
-        self.rt_url = get_first_google_result(f'movie {self.movie_name} rotten tomatoes')
+        self.rt_url = get_first_google_result(f'movie {self.movie_name} rotten tomatoes {self.year}')
 
     def get_ratings_from_rt_url(self):
         resp = requests.get(self.rt_url)

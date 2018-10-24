@@ -15,6 +15,14 @@ class PopcornClient:
                               params={'sort': sort, 'order': -1}).json()
         return movies
 
+    @staticmethod
+    def add_fields(m):
+        m.update({
+            'scrape_date': CURRENT_DATE,
+            'magnet_1080p': m['torrents'].get('en', {}).get('1080p', {}).get('url'),
+            'magnet_720p': m['torrents'].get('en', {}).get('720p', {}).get('url')
+        })
+
     @classmethod
     def get_new_movies(cls, max_pages = 10, request_delay = 3, stop_func=None):
         new_movies = []
@@ -26,7 +34,7 @@ class PopcornClient:
                     return new_movies
                 else:
                 # if not MoviesStore.exists(m['_id']):
-                    m.update({'scrape_date': CURRENT_DATE})
+                    cls.add_fields(m)
                     new_movies.append(m)
             time.sleep(request_delay)
         logger.warn('All movies in range were new, '

@@ -1,8 +1,7 @@
 import json
-import pprint
 
-from emailer import send_mailgun_notifications
-from popcorn_movies import MoviesStore, PopcornClient
+from movies_notifier.mailgun import send_mailgun_notifications
+from movies_notifier.popcorn_movies import MoviesStore
 
 m_store = MoviesStore()
 

@@ -3,7 +3,7 @@ import requests
 
 from parsel import Selector
 
-from logger import logger
+from movies_notifier.logger import logger
 
 
 def get_first_google_result(query):

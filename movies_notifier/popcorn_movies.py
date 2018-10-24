@@ -3,12 +3,11 @@ import datetime
 import requests
 import json
 import time
-from pprint import pprint
 import pandas as pd
 
-from logger import logger
+from movies_notifier.logger import logger
 
-from rotten_tomatoes import RTScraper
+from movies_notifier.rotten_tomatoes import RTScraper
 
 CURRENT_DATE = datetime.datetime.now().date().isoformat()
 
@@ -39,8 +38,8 @@ class PopcornClient:
                     logger.info(f'Got {len(new_movies)} new movies from popcorn API')
                     return new_movies
             time.sleep(request_delay)
-        logger.info('All movies in range were new, '
-              'either something is wrong or movie cache empty')
+        logger.warn('All movies in range were new, '
+                    'either something is wrong or movie cache empty')
         return new_movies
 
 

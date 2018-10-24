@@ -1,46 +1,13 @@
-import os
-import datetime
-import requests
 import json
+import os
 import time
+
 import pandas as pd
 
 from movies_notifier.logger import logger
-
+from movies_notifier.popcorn import PopcornClient
+from movies_notifier.common import CURRENT_DATE, MOVIES_DIR
 from movies_notifier.rotten_tomatoes import RTScraper
-
-CURRENT_DATE = datetime.datetime.now().date().isoformat()
-
-MOVIES_DIR = './data/movies'
-os.makedirs(MOVIES_DIR, exist_ok=True)
-
-
-class PopcornClient:
-
-    POPCORN_API_URI = "https://tv-v2.api-fetch.website"
-
-    @classmethod
-    def get_popcorn_movies(cls, page, sort='last added'):
-        movies = requests.get(cls.POPCORN_API_URI + f'/movies/{page}',
-                              params={'sort': sort, 'order': -1}).json()
-        return movies
-
-    @classmethod
-    def get_new_movies(cls, max_pages = 10, request_delay = 3):
-        new_movies = []
-        for i in range(1, max_pages):
-            page_movies = cls.get_popcorn_movies(i)
-            for m in page_movies:
-                if not MoviesStore.exists(m['_id']):
-                    m.update({'scrape_date': CURRENT_DATE})
-                    new_movies.append(m)
-                else:
-                    logger.info(f'Got {len(new_movies)} new movies from popcorn API')
-                    return new_movies
-            time.sleep(request_delay)
-        logger.warn('All movies in range were new, '
-                    'either something is wrong or movie cache empty')
-        return new_movies
 
 
 class MoviesStore:
@@ -98,12 +65,8 @@ class MoviesStore:
                             f"{m['scrape_date']} is more than {days_diff} old")
 
     def get_new_movies(self, max_pages=3):
-        self.new_movies = PopcornClient.get_new_movies(max_pages=max_pages)
+        self.new_movies = PopcornClient.get_new_movies(max_pages=max_pages, stop_func=self.exists)
         self.add_rt_fields(self.new_movies)
         self.save_movies(self.new_movies)
         # self.delete_too_old()
         return self.new_movies
-
-
-
-

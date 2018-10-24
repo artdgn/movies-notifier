@@ -1,7 +1,7 @@
 import json
 
 from movies_notifier.mailgun import send_mailgun_notifications
-from movies_notifier.popcorn_movies import MoviesStore
+from movies_notifier.movies import MoviesStore
 
 m_store = MoviesStore()
 

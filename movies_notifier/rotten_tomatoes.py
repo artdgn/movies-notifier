@@ -50,10 +50,10 @@ class RTScraper:
 
         if check_title:
             for r_dict in first_page_results:
-                goog_title = self.strip_punctuation(r_dict['title'])
-                if \
-                        self.strip_punctuation(self.movie_name) in goog_title \
-                        and 'Rotten Tomatoes' in goog_title:
+                google_title = self.strip_punctuation(r_dict['title'])
+                input_title_parts = self.strip_punctuation(self.movie_name).split()
+                if all([w in google_title for w in input_title_parts]) \
+                        and 'rottentomatoes.com/m/' in r_dict['link']:
                    rt_url = r_dict['link']
 
         if rt_url is None:
@@ -93,7 +93,9 @@ class RTScraper:
             'title': self.title,
             # 'synopsis': self.synopsis
         }
-        if check_title and self.movie_name.lower() not in self.title.lower():
+        if check_title \
+                and self.strip_punctuation(self.movie_name) \
+                not in self.strip_punctuation(self.title):
             res['critics_rating'] = None
             res['audience_rating'] = None
             err_msg = f'RT title and input title are different: ' \

@@ -15,7 +15,8 @@ def get_first_page_google_results(query):
             css_text = sel.css('.g:nth-child(1) .r'). \
                 css('a::attr(href)').extract_first()
             link = re.findall('(https://\S*)[%|/]', css_text)[0]
-            title = sel.css('.g:nth-child(1) .r').css('b::text').extract() or ''
+            title = sel.css(f'.g:nth-child({i}) .r').css('b::text').extract() \
+                    or ''
             title = ' '.join(title)
             results.append({'link': link, 'title': title})
     except Exception as e:
@@ -92,12 +93,12 @@ class RTScraper:
             'title': self.title,
             # 'synopsis': self.synopsis
         }
-        if check_title and self.movie_name.lower() !=  self.title.lower():
+        if check_title and self.movie_name.lower() not in self.title.lower():
             res['critics_rating'] = None
             res['audience_rating'] = None
             err_msg = f'RT title and input title are different: ' \
-                      f'{self.strip_punctuation(self.movie_name)} ' \
-                      f'!= {self.strip_punctuation(self.title)}'
+                      f'{self.strip_punctuation(self.title)} ' \
+                      f'!= {self.strip_punctuation(self.movie_name)}'
             res['error'] = err_msg
             logger.error(err_msg)
         return res

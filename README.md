@@ -10,7 +10,7 @@ A tool that:
 
 
 ### To run this:
-1. Git clone this repo and install requirements ()`pip install .` or `pip install -r requirements.txt`)
+1. Git clone this repo and install requirements (`pip install .` or `pip install -r requirements.txt`)
 2. Set up Mailgun account for emailing and put the domain, api-key, and recipients in a json in your `~/.mailgun/mailgun.json` or change the email set-up to whatever suits you (like AWS SES).
 4. Run `python check_new_movies.py` or `. cron.sh` or setup a cron-job to run `cron.sh`
 

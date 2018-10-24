@@ -64,7 +64,7 @@ class MoviesStore:
                 logger.info(f"Removing {m['_id']} because "
                             f"{m['scrape_date']} is more than {days_diff} old")
 
-    def get_new_movies(self, max_pages=3):
+    def get_new_movies(self, max_pages=10):
         self.new_movies = PopcornClient.\
             get_new_movies(max_pages=max_pages, stop_func=self.exists)
         self.add_rt_fields(self.new_movies)

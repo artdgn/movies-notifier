@@ -25,10 +25,10 @@ class RTScraper:
         self.year = year
         self.rt_url = None
 
-    def get_ratings(self):
+    def get_ratings(self, check_title=True):
         self.get_rt_url_from_google()
         self.get_ratings_from_rt_url()
-        return self.format_results()
+        return self.format_results(check_title=check_title)
 
     def get_rt_url_from_google(self):
         self.rt_url = get_first_google_result(f'movie {self.movie_name} rotten tomatoes {self.year}')
@@ -41,10 +41,20 @@ class RTScraper:
         audience_text = sel.css('.meter-value '
                                 '.superPageFontColor::text').extract_first()
         self.audience_rating = audience_text[:-1] if audience_text is not None else audience_text
+        self.title = sel.css('#movie-title::text').extract_first().strip()
+        self.synopsis = sel.css('#movieSynopsis::text').extract_first().strip()
 
-    def format_results(self):
-        return {
+    def format_results(self, check_title=True):
+        res = {
             'rt_url': self.rt_url,
             'critics_rating': self.critics_rating,
-            'audience_rating': self.audience_rating
+            'audience_rating': self.audience_rating,
+            'title': self.title,
+            'synopsis': self.synopsis
         }
+        if check_title and self.movie_name.lower() !=  self.title:
+            res['critics_rating'] = None
+            res['audience_rating'] = None
+            res['error'] = 'RT title and input title are different'
+        return res
+

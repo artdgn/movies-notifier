@@ -87,7 +87,7 @@ class MoviesStore:
                 except Exception as e:
                     logger.error(f'Failed json read for {filepath}')
 
-    def delete_too_old(self, days_diff = 10):
+    def delete_too_old(self, days_diff = 60):
         def too_old(date):
             return (pd.to_datetime(CURRENT_DATE) - pd.to_datetime(date)) > \
                    pd.to_timedelta(f'{days_diff} days')
@@ -102,6 +102,7 @@ class MoviesStore:
         self.new_movies = PopcornClient.get_new_movies(max_pages=max_pages)
         self.add_rt_fields(self.new_movies)
         self.save_movies(self.new_movies)
+        # self.delete_too_old()
         return self.new_movies
 
 

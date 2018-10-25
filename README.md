@@ -16,7 +16,6 @@ A tool that:
 
 
 ### Still to do:
-* send full table of new movies as attachment and not only the selected "good" movies.
 * rescrape previous scrapes to check if RT data added (might happen for newer movies)
 * add more sophisitcated movie selection logic (perhaps some tiers of relevance).
 * scrape ciritics reviews and calculate directly when there are too few reviews for a "tomatometer".

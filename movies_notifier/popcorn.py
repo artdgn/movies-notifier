@@ -25,21 +25,33 @@ class PopcornClient:
 
     @classmethod
     def get_new_movies(cls, max_pages = 10, request_delay = 3, stop_func=None):
-        new_movies = []
-        for i in range(1, max_pages):
+
+        def movies_list():
+            return list(new_movies.values())
+
+        new_movies = {}  #using dict or deduplication as API sometimes returns duplicates
+
+        for i in range(1, max_pages + 1):
+
             page_movies = cls.get_popcorn_movies(i)
+
             for m in page_movies:
-                if stop_func is not None and stop_func(m['_id']):
+                m_id = m['_id']
+
+                if stop_func is not None and stop_func(m_id):
                     logger.info(f'Got {len(new_movies)} new movies from popcorn API')
-                    return new_movies
-                else:
-                # if not MoviesStore.exists(m['_id']):
-                    cls.add_fields(m)
-                    new_movies.append(m)
+                    return movies_list()
+
+                cls.add_fields(m)
+                new_movies[m_id] = m
+
             time.sleep(request_delay)
-        logger.warn('All movies in range were new, '
-                    'either something is wrong or movie cache empty')
-        return new_movies
+
+        if stop_func is not None:
+            logger.warn('All movies in range were new, '
+                        'either something is wrong or movie cache empty')
+
+        return movies_list()
 
 
 

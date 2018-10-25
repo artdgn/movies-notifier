@@ -10,16 +10,22 @@ A tool that:
 
 
 ### To run this:
-1. Git clone this repo and install requirements (`pip install .` or `pip install -r requirements.txt`)
-2. Set up Mailgun account for emailing and put the domain, api-key, and recipients in a json in your `~/.mailgun/mailgun.json` or change the email set-up to whatever suits you (like AWS SES).
-4. Run `python check_new_movies.py` or `. cron.sh` or setup a cron-job to run `cron.sh`
+1. Git clone this repo and install requirements (`pip install .` or `pip install -r requirements.txt`) preferrably in a python3.6 venv/conda.
+2. Set up Mailgun account for emailing and put the domain, api-key, and recipients in a json in your `~/.mailgun/mailgun.json` or change the email set-up to whatever suits you (like AWS SES) or do whatever else you like with the output.
+4. Run `python check_new_movies.py` or `. cron.sh` (check you're using the right python path) or setup a cron-job to run `cron.sh`
 
 
 ### Still to do:
-* dedup new movies
 * prettier email (html table?) with clickable magnet links
 * send full table of new movies as attachment and not only the selected "good" movies.
-* resrape previous scrapes to check if RT data changed (might happen for newer movies)
+* rescrape previous scrapes to check if RT data added (might happen for newer movies)
 * add more sophisitcated movie selection logic (perhaps some tiers of relevance).
 * scrape ciritics reviews and calculate directly when there are too few reviews for a "tomatometer".
 * add CLI for more refined control of parameters.
+
+
+#### Tools and references for development:
+- scraping: [Scrapy](https://docs.scrapy.org/en/latest/)
+- scraping: [Selector Gadget](https://selectorgadget.com/)
+- torrents: [Popcorn-API docs](https://popcornofficial.docs.apiary.io/#)
+- emails: [Mailgun examples](https://documentation.mailgun.com/en/latest/api-sending.html#examples)

@@ -2,6 +2,7 @@ import json
 
 import requests
 
+from movies_notifier.logger import logger
 from movies_notifier.common import MAILGUN_DATA_PATH
 
 try:
@@ -14,11 +15,16 @@ except Exception as e:
 
 
 def send_mailgun_notifications(subject, text):
-    return requests.post(
+    resp = requests.post(
         f"https://api.mailgun.net/v3/{MAILGUN_DATA['MAILGUN_DOMAIN']}/messages",
         auth=("api", MAILGUN_DATA['MAILGUN_API_KEY']),
         data={"from": f"popcorn alerts <mailgun@{MAILGUN_DATA['MAILGUN_DOMAIN']}>",
               "to": MAILGUN_DATA['MAILGUN_RECIPIENTS'],
               "subject": subject,
               "text": text})
+    if resp.ok:
+        logger.info(f"Sent Mailgun notification to {MAILGUN_DATA['MAILGUN_RECIPIENTS']}")
+    else:
+        logger.error(f"Failed sending Mailgun notification: got {resp.text}")
+    return resp
 

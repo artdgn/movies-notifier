@@ -90,4 +90,4 @@ ENV/
 
 *.csv
 *.json
-
+*.sqlite  # requests_cache

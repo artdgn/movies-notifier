@@ -1,5 +1,4 @@
 setuptools==39.0.1
 pandas==0.23.1
-requests_cache==0.4.13
 requests==2.18.4
 parsel==1.4.0

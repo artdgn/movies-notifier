@@ -3,10 +3,6 @@ import json
 from movies_notifier.mailgun import send_mailgun_notifications
 from movies_notifier.movies import MoviesStore
 
-import requests_cache
-
-requests_cache.install_cache(expire_after=7*86400)
-
 m_store = MoviesStore()
 
 new_movies = m_store.get_new_movies()

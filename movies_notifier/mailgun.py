@@ -1,4 +1,5 @@
 import json
+import os
 
 import requests
 
@@ -14,14 +15,18 @@ except Exception as e:
                      f"MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_RECIPIENTS.")
 
 
-def send_mailgun_notifications(subject, text):
+def send_mailgun_notifications(subject='', text='', html='', files=()):
     resp = requests.post(
         f"https://api.mailgun.net/v3/{MAILGUN_DATA['MAILGUN_DOMAIN']}/messages",
         auth=("api", MAILGUN_DATA['MAILGUN_API_KEY']),
         data={"from": f"popcorn alerts <mailgun@{MAILGUN_DATA['MAILGUN_DOMAIN']}>",
               "to": MAILGUN_DATA['MAILGUN_RECIPIENTS'],
               "subject": subject,
-              "text": text})
+              "text": text,
+              "html": html
+              },
+        files=[('attachment', (os.path.split(f)[1], open(f, 'rb').read())) for f in files]
+    )
     if resp.ok:
         logger.info(f"Sent Mailgun notification to {MAILGUN_DATA['MAILGUN_RECIPIENTS']}")
     else:

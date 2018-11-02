@@ -21,7 +21,7 @@ class RTScraper:
 
     @staticmethod
     def strip_punctuation(s):
-        return re.sub(r'[^\w\s]', '', s)
+        return re.sub(r'[^\w\s]', '', s).lower()
 
     def get_rt_url_from_google(self, check_title=True):
 

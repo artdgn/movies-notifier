@@ -16,6 +16,7 @@ A tool that:
 
 
 ### Still to do:
+* use AWS free tier to store full table (S3 and link in email / API in lambda + dynamo)
 * rescrape previous scrapes to check if RT data added (might happen for newer movies)
 * add more sophisitcated movie selection logic (perhaps some tiers of relevance).
 * scrape ciritics reviews and calculate directly when there are too few reviews for a "tomatometer".

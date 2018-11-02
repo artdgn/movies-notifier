@@ -3,16 +3,14 @@ import json
 import pandas as pd
 
 from movies_notifier import pandas_utils
-from movies_notifier.movies import MoviesStore
+from movies_notifier.movies_store import MoviesStore
 
 pandas_utils.console_settings()
 
 m_store = MoviesStore()
 m_store.load_movies()
 
-movie_list = list(m_store.movies.values())
-
-df = m_store.movie_list_to_export_df(movie_list)
+df = m_store.movies_df()
 
 # cut off analysis
 df['critics_rating'] = pd.to_numeric(df['critics_rating'])

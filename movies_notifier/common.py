@@ -4,6 +4,7 @@ import datetime
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..')
 MOVIES_DIR = os.path.join(ROOT_DIR, 'data/movies')
 LOG_DIR = os.path.join(ROOT_DIR, 'data/logs')
+SENT_DIR = os.path.join(ROOT_DIR, 'data/sent')
 
 CURRENT_TIMESTAMP = datetime.datetime.now().isoformat()
 CURRENT_DATE = datetime.datetime.now().date().isoformat()

@@ -1,3 +1,5 @@
+import math
+
 import requests
 import time
 
@@ -10,45 +12,64 @@ class PopcornWithRT:
 
     POPCORN_API_URI = "https://tv-v2.api-fetch.website"
 
+    N_MOVIES_PAGE = 50
+
     @classmethod
     def get_popcorn_movies(cls, page, sort='last added'):
-        movies = requests.get(f'{cls.POPCORN_API_URI}/movies/{page}',
-                              params={'sort': sort, 'order': -1}).json()
+        resp = requests.get(f'{cls.POPCORN_API_URI}/movies/{page}',
+                              params={'sort': sort, 'order': -1})
+        if resp.ok:
+            movies = resp.json()
+        else:
+            logger.error(f'Failed getting {page} from Popcorn: {resp}')
+            movies = []
         return movies
 
     @staticmethod
-    def add_info_fields(m):
+    def add_info_fields(m, page=None, index=None):
         m.update({
             'scrape_date': CURRENT_DATE,
+            'scrape_page': page,
+            'scrape_index_on_page': index,
             'magnet_1080p': m['torrents'].get('en', {}).get('1080p', {}).get('url'),
             'magnet_720p': m['torrents'].get('en', {}).get('720p', {}).get('url')
         })
 
 
     @classmethod
-    def get_new_movies(cls, max_pages = 10, request_delay = 3,
-                       skip_func=None, stop_on_stale_page=True):
+    def get_new_movies(cls,
+                       movies_offset_range = (1, 100),
+                       request_delay = 3,
+                       skip_func=None,
+                       stop_on_stale_page=True):
 
         new_movies = {}  #using dict or deduplication as API sometimes returns duplicates
 
-        for i in range(1, max_pages + 1):
+        start_page = math.floor(movies_offset_range[0] / cls.N_MOVIES_PAGE) + 1
+        end_page = math.ceil(movies_offset_range[1] / cls.N_MOVIES_PAGE)
+
+        in_offset_range = lambda i, j: \
+            movies_offset_range[0] <= ((i - 1) * cls.N_MOVIES_PAGE + j + 1) <= movies_offset_range[1]
+
+        for i in range(start_page, end_page + 1):
 
             page_movies = cls.get_popcorn_movies(i)
             new_movies_on_page = 0
 
-            for m in page_movies:
-                m_id = m['_id']
+            for j, m in enumerate(page_movies):
 
-                if skip_func is not None and skip_func(m_id):
+                if skip_func is not None and skip_func(m):
                     continue
 
                 new_movies_on_page += 1
 
-                cls.add_info_fields(m)
+                if in_offset_range(i, j):
 
-                cls.add_rt_fields(m, scrape_delay=request_delay)
+                    cls.add_info_fields(m, page=i, index=j)
 
-                new_movies[m_id] = m
+                    cls.add_rt_fields(m, scrape_delay=request_delay)
+
+                    new_movies[m['_id']] = m
 
             if stop_on_stale_page and not new_movies_on_page:
                 break

@@ -8,7 +8,6 @@ from movies_notifier.movies_store import MoviesStore
 pandas_utils.console_settings()
 
 m_store = MoviesStore()
-m_store.load_movies()
 
 df = m_store.movies_df()
 

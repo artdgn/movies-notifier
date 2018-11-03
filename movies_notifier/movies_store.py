@@ -53,14 +53,14 @@ class MoviesStore:
                 json.dump(m, f)
             logger.info(f"Saved {m.id()} ({m.title()})")
 
-    def add_movies(self, movies, save=True):
-        [self.add_movie(m, save=save) for m in movies]
+    def add_movies(self, movies, save=True, overwrite=False):
+        [self.add_movie(m, save=save, overwrite=overwrite) for m in movies]
 
-    def add_movie(self, movie_dict, save=True):
+    def add_movie(self, movie_dict, save=True, overwrite=False):
         m = Movie(movie_dict)
         self.movies[m.id()] = m
         if save:
-            self.save_movie(m)
+            self.save_movie(m, overwrite=overwrite)
 
     def load_movies(self):
         files = os.listdir(MOVIES_DIR)

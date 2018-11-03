@@ -9,13 +9,16 @@ A tool that:
 \* good - currently defined as having critics and audience ratings both higher than 80%.
 
 
-### To run this:
+### To run this locally:
 1. Git clone this repo and install requirements (`pip install .` or `pip install -r requirements.txt`) preferrably in a python3.6 venv/conda.
-2. Set up Mailgun account for emailing and put the domain, api-key, and recipients in a json in your `~/.mailgun/mailgun.json` or change the email set-up to whatever suits you (like AWS SES) or do whatever else you like with the output.
-4. Run `python check_new_movies.py` or `. cron.sh` (check you're using the right python path) or setup a cron-job to run `cron.sh`
+2. Optional: set up Mailgun account** for emailing or just print the notifications with the `-ne` option.
+3. Run `python check_new_movies.py` or `. cron.sh` (check you're using the right python path) or setup a cron-job to run `cron.sh`
+
+\** setting up Mailgun: after setting up the account, put the domain, api-key, and recipients in a json in your `~/.mailgun/mailgun.json`
 
 
 ### Still to do:
+* dockerise
 * find a way to send full scrape table (S3? free file hosting? API in lambda?)
 * add more sophisitcated movie selection logic (perhaps some tiers of relevance).
 * scrape ciritics reviews and calculate directly when there are too few reviews for a "tomatometer".

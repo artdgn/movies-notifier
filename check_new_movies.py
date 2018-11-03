@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from movies_notifier.popcorn import PopcornWithRT
 from movies_notifier.movies_store import MoviesStore
 from movies_notifier.movie_quality import select_good_movies
-from movies_notifier.mailgun import MailgunNotifier
+from movies_notifier.mailgun import Notifier
 
 
 parser = ArgumentParser()
@@ -15,6 +15,8 @@ parser.add_argument("-o", "--overwrite", action="store_true",
                     help="whether to rescrape and overwrite everything (to check if RT scores udpated)")
 parser.add_argument("-d", "--delay", type=int, default=5,
                     help="delay between scraping requests")
+parser.add_argument("-ne", "--no-email", action="store_true",
+                    help="don't notify by email (use this if you don't have email notifier set up)")
 parser.add_argument("--resend-notifications", action="store_true",
                     help="resend notifications for movies that were already in previous notifications")
 args = parser.parse_args()
@@ -33,6 +35,8 @@ m_store.add_movies(
 
 good_movies = select_good_movies(m_store.movies.values())
 
-notification_resp = MailgunNotifier.notify(
-    good_movies, resend=args.resend_notifications)
+notification_backend = None if args.no_email else 'mailgun'
+notification_resp = \
+    Notifier(backend=notification_backend).\
+    notify(good_movies, resend=args.resend_notifications)
 

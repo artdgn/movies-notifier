@@ -12,9 +12,9 @@ new_movies = PopcornWithRT.get_new_movies(
     stop_on_stale_page=True,
     request_delay=5)
 
-m_store.add_movies(new_movies)
+m_store.add_movies(new_movies, save=True)
 
 good_movies = select_good_movies(m_store.movies.values())
 
-notification_resp = MailgunNotifier.notify(good_movies)
+notification_resp = MailgunNotifier.notify(good_movies, resend=False)
 

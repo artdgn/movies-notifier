@@ -3,6 +3,7 @@ import os
 
 import requests
 
+from movies_notifier.common import CURRENT_DATE
 from movies_notifier.logger import logger
 from movies_notifier.common import MAILGUN_DATA_PATH, SENT_DIR
 from movies_notifier.movies_store import Movie
@@ -19,15 +20,16 @@ except Exception as e:
 class MailgunNotifier:
 
     @classmethod
-    def notify(cls, movies, ignore_sent=False):
+    def notify(cls, movies, resend=False):
         to_send = [Movie(m).minimal_fields() for m in movies
-                   if (ignore_sent or not cls.notified(m))]
+                   if (resend or not cls.notified(m))]
         if to_send:
             resp = cls.send_mailgun_notifications(
-                subject=f'{len(to_send)} new movies from popcorn',
+                subject=f'{CURRENT_DATE}: {len(to_send)} new movies from popcorn',
                 text=json.dumps(to_send, indent=4)
             )
             if resp.ok:
+                logger.info(f'Notified of {len(to_send)} movies.')
                 cls.save_notified(to_send)
             else:
                 logger.error(f'Notifying failed: {resp}')

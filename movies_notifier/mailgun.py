@@ -19,10 +19,12 @@ class Notifier:
         try:
             return json.load(open(MAILGUN_DATA_PATH))
         except Exception as e:
-            raise ValueError(f"Mailgun data doesn't exist or is "
-                             f"not a valid json at: {MAILGUN_DATA_PATH}. "
-                             f"Provide a json file with following fields: "
-                             f"MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_RECIPIENTS.")
+            logger.error(f"Mailgun data doesn't exist or is "
+                         f"not a valid json at: {MAILGUN_DATA_PATH}. "
+                         f"Either use '-ne' / '--no-email' option to not send emails"
+                         f"or provide a json file with following fields: "
+                         f"MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_RECIPIENTS.")
+            return {}
 
     def notify(self, movies, resend=False):
         to_send = [Movie(m).minimal_fields() for m in movies
@@ -35,19 +37,18 @@ class Notifier:
             text = json.dumps(to_send, indent=4)
 
             if self.backend == 'mailgun':
-                resp = self.send_mailgun_notifications(subject=subject, text=text                )
-                if resp.ok:
-                    logger.info(f'Notified of {len(to_send)} movies.')
+                sent = self.send_mailgun_notifications(subject=subject, text=text)
+                if sent:
                     self.save_notified(to_send)
-                else:
-                    logger.error(f'Notifying failed: {resp}')
-                return resp
-
             else:
                 logger.info(f'Only "mailgun" email notification backend supported '
                             f'({self.backend} supplied), printing results instead:')
-                logger.info(subject)
-                logger.info(text)
+                self.log_notifications(subject=subject, text=text)
+
+    @staticmethod
+    def log_notifications(subject, text):
+        logger.info(subject)
+        logger.info(text)
 
     @classmethod
     def save_notified(cls, movies):
@@ -65,22 +66,30 @@ class Notifier:
         return os.path.exists(cls.movie_json_path(m))
 
     @classmethod
-    def send_mailgun_notifications(cls, subject='', text='', html='', files=()):
+    def send_mailgun_notifications(cls, subject='', text='', html='', files=(), print_on_fail=True):
         mailgun_config = cls.mailgun_data()
-        resp = requests.post(
-            f"https://api.mailgun.net/v3/{mailgun_config['MAILGUN_DOMAIN']}/messages",
-            auth=("api", mailgun_config['MAILGUN_API_KEY']),
-            data={"from": f"popcorn alerts <mailgun@{mailgun_config['MAILGUN_DOMAIN']}>",
-                  "to": mailgun_config['MAILGUN_RECIPIENTS'],
-                  "subject": subject,
-                  "text": text,
-                  "html": html
-                  },
-            files=[('attachment', (os.path.split(f)[1], open(f, 'rb').read())) for f in files]
-        )
-        if resp.ok:
-            logger.info(f"Sent Mailgun notification to {mailgun_config['MAILGUN_RECIPIENTS']}")
-        else:
-            logger.error(f"Failed sending Mailgun notification: got {resp.text}")
-        return resp
+        sent = False
+        if mailgun_config:
+            resp = requests.post(
+                f"https://api.mailgun.net/v3/{mailgun_config['MAILGUN_DOMAIN']}/messages",
+                auth=("api", mailgun_config['MAILGUN_API_KEY']),
+                data={"from": f"popcorn alerts <mailgun@{mailgun_config['MAILGUN_DOMAIN']}>",
+                      "to": mailgun_config['MAILGUN_RECIPIENTS'],
+                      "subject": subject,
+                      "text": text,
+                      "html": html
+                      },
+                files=[('attachment', (os.path.split(f)[1], open(f, 'rb').read())) for f in files]
+            )
+            if resp.ok:
+                logger.info(f"Sent Mailgun notification to {mailgun_config['MAILGUN_RECIPIENTS']}")
+                logger.info(f'Mailgun response: {resp.text}')
+                sent = True
+
+        if not sent:
+            logger.error(f"Failed sending Mailgun notification: got {resp} {resp.text}")
+            if print_on_fail:
+                cls.log_notifications(subject=subject, text=text)
+
+        return sent
 

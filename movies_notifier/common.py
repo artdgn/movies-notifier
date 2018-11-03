@@ -14,4 +14,4 @@ CURRENT_DATE = datetime.datetime.now().date().isoformat()
 
 LOG_FILEPATH = os.path.join(LOG_DIR, f'log_{CURRENT_TIMESTAMP}.txt')
 
-MAILGUN_DATA_PATH = os.path.expanduser('~/.mailgun/mailgun.json')
+MAILGUN_DATA_PATH = os.path.join(ROOT_DIR, 'data/mailgun/mailgun.json')

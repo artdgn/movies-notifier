@@ -7,16 +7,16 @@ from movies_notifier.mailgun import Notifier
 
 
 parser = ArgumentParser()
+parser.add_argument("-ne", "--no-email", action="store_true",
+                    help="don't notify by email (use this if you don't have email notifier set up)")
 parser.add_argument("-n", "--n-movies", type=int, default=200,
-                    help="number of recent movies to check")
+                    help="number of recent movies to check (default 200)")
 parser.add_argument("-s", "--start-offset", type=int, default=1,
-                    help="offset from which to start checking")
+                    help="offset from which to start checking (default 1)")
 parser.add_argument("-o", "--overwrite", action="store_true",
                     help="whether to rescrape and overwrite everything (to check if RT scores udpated)")
 parser.add_argument("-d", "--delay", type=int, default=5,
-                    help="delay between scraping requests")
-parser.add_argument("-ne", "--no-email", action="store_true",
-                    help="don't notify by email (use this if you don't have email notifier set up)")
+                    help="delay between scraping requests (default 5)")
 parser.add_argument("--resend-notifications", action="store_true",
                     help="resend notifications for movies that were already in previous notifications")
 args = parser.parse_args()
@@ -35,7 +35,7 @@ m_store.add_movies(
 
 good_movies = select_good_movies(m_store.movies.values())
 
-notification_backend = None if args.no_email else 'mailgun'
+notification_backend = 'none' if args.no_email else 'mailgun'
 notification_resp = \
     Notifier(backend=notification_backend).\
     notify(good_movies, resend=args.resend_notifications)

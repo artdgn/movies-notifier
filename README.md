@@ -17,7 +17,7 @@ A tool that:
     to just print them out.
 3. run using `docker run --rm -v ~/your_movies_data:/movies_notifier/data artdgn/movies_notifier`, 
     with no command line options this will just print the help message, 
-    or add e.g. `-n 100 -ne` to to that line to scan last 100 movies and print the notifications to screen.
+    or add e.g. `-n 100 -ne` to that line to scan last 100 movies and print the notifications to screen.
 
 #### Using local installation
 1. Git clone this repo and install requirements (`pip install .` or `pip install -r requirements.txt`) 
@@ -29,7 +29,7 @@ A tool that:
     - setup a cron-job to run `scripts/cron.sh`
 
 \** setting up Mailgun: after setting up the account, put the domain, api-key, and recipients in a 
-    json in `movies_notifier/data/mailgun/mailgun.json` or just run and check the error message. 
+    json in `movies_notifier/data/mailgun/mailgun.json` or just run and check the error message for exact instructions. 
 
 
 ### Still to do:

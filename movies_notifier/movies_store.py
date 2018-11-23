@@ -24,8 +24,11 @@ class Movie(dict):
 
     def minimal_fields(self, keep_keys=None):
         if keep_keys is None:
-            keep_keys = ['_id', 'genres', 'rotten_tomatoes',
-                         'title', 'year', 'magnet_1080p', 'magnet_720p']
+            keep_keys = ['title', 'year', 'genres', 'rotten_tomatoes']
+            keep_keys.append('magnet_1080p'
+                             if self.get('magnet_1080p') else 'magnet_720p')
+            keep_keys.append('_id')
+
         return Movie({k: self[k] for k in keep_keys if k in self})
 
 

@@ -11,5 +11,5 @@ def select_good_movies(movies, critics_threshold=80, audience_threshold=80):
                 rt_data['audience_rating'] and \
                 int(rt_data['audience_rating']) > audience_threshold:
             good_movies.append(m)
-    logger.info(f'Selected {len(good_movies)} good movies from {len(movies)} new movies')
+    logger.info(f'Selected {len(good_movies)} good movies from {len(movies)} movies')
     return good_movies

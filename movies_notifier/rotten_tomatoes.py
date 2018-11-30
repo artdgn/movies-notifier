@@ -13,15 +13,24 @@ class RTScraper:
         self.movie_name = movie_name
         self.year = year
         self.rt_url = None
+        self.critics_rating = None
+        self.audience_rating = None
+        self.title = None
+        self.synopsis = None
+        self.error = None
 
     def get_ratings(self, check_title=True):
-        self.get_rt_url_from_google()
-        self.get_ratings_from_rt_url()
+        try:
+            self.get_rt_url_from_google()
+            self.get_ratings_from_rt_url()
+        except Exception as e:
+            logger.exception(e)
+            self.error = str(e)
         return self.format_results(check_title=check_title)
 
     @staticmethod
     def strip_punctuation(s):
-        return re.sub(r'[^\w\s]', '', s).lower()
+        return re.sub(r'[^\w\s]', '', str(s)).lower()
 
     def get_rt_url_from_google(self, check_title=True):
 
@@ -49,6 +58,7 @@ class RTScraper:
 
     def get_ratings_from_rt_url(self):
         resp = requests.get(self.rt_url)
+
         sel = Selector(text=resp.text)
 
         # critics
@@ -75,7 +85,11 @@ class RTScraper:
             'title': self.title,
             # 'synopsis': self.synopsis
         }
-        if check_title \
+
+        if self.error:
+            res['error'] = self.error
+
+        if not self.error and check_title \
                 and self.strip_punctuation(self.movie_name) \
                 not in self.strip_punctuation(self.title):
             res['critics_rating'] = None

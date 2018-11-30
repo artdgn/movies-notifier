@@ -20,4 +20,8 @@ df_num.drop(['magnet_1080p', 'magnet_720p'], axis=1, inplace=True)
 
 df_num.plot.scatter(x='critics_rating', y='audience_rating')
 
-df_num[(df_num['critics_rating'] > 90) & (df_num['audience_rating'] < 80 )].sort_values('audience_rating')
+# filt = (df_num['critics_rating'] > 90) & (df_num['audience_rating'] < 80 )
+# filt = (df_num['critics_rating'] < 80) & (df_num['audience_rating'] > 98 )
+# filt = (df_num['critics_rating'] > 98) & (df_num['audience_rating'] < 80 )
+filt = (df_num['critics_rating'] >= 90) & (df_num['audience_rating'] >= 90 )
+print(df_num[filt].sort_values('audience_rating'))

@@ -14,7 +14,8 @@ def get_first_page_google_results(query):
         for i in range(1, 11):
             css_text = sel.css('.g:nth-child(1) .r'). \
                 css('a::attr(href)').extract_first()
-            link = re.findall('(https://\S*)[%|/]', css_text)[0]
+            # link = re.findall('(https://\S*)[%|/]', css_text)[0]
+            link = re.findall('(https://\S*)', css_text)[0].split('&')[0]
             title = sel.css(f'.g:nth-child({i}) .r').css('b::text').extract() \
                     or ''
             title = ' '.join(title)

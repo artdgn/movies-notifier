@@ -14,10 +14,24 @@ class PopcornWithRT:
 
     N_MOVIES_PAGE = 50
 
+    sort_map = {'l': 'last added',
+                'p': 'pupularity',
+                't': 'trending'}
+
+    @classmethod
+    def _sort_param(cls, sort_str):
+        sort_str = sort_str.strip()
+        if sort_str in cls.sort_map.values():
+            return sort_str
+        elif sort_str in cls.sort_map:
+            return cls.sort_map[sort_str]
+        else:
+            raise ValueError(f'Unknown value for sort type: {sort_str}')
+
     @classmethod
     def get_popcorn_movies(cls, page, sort='last added'):
         resp = requests.get(f'{cls.POPCORN_API_URI}/movies/{page}',
-                              params={'sort': sort, 'order': -1})
+                              params={'sort': cls._sort_param(sort), 'order': -1})
         if resp.ok:
             movies = resp.json()
         else:
@@ -41,6 +55,7 @@ class PopcornWithRT:
                        movies_offset_range = (1, 100),
                        request_delay = 3,
                        skip_func=None,
+                       sort='l',
                        stop_on_stale_page=True):
 
         new_movies = {}  #using dict or deduplication as API sometimes returns duplicates
@@ -53,7 +68,7 @@ class PopcornWithRT:
 
         for i in range(start_page, end_page + 1):
 
-            page_movies = cls.get_popcorn_movies(i)
+            page_movies = cls.get_popcorn_movies(i, sort=sort)
             new_movies_on_page = 0
 
             for j, m in enumerate(page_movies):

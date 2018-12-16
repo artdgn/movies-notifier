@@ -3,11 +3,13 @@ import requests
 
 from parsel import Selector
 
-from movies_notifier.google_search import get_first_page_google_results
+import movies_notifier.search as search
 from movies_notifier.logger import logger
 
 
 class RTScraper:
+
+    allowed_missing_words = ['the']
 
     def __init__(self, movie_name, year):
         self.movie_name = movie_name
@@ -19,38 +21,51 @@ class RTScraper:
         self.synopsis = None
         self.error = None
 
-    def get_ratings(self, check_title=True):
+    def _search_query(self):
+        return f'movie {self.movie_name} {self.year} site:www.rottentomatoes.com'
+
+    def get_ratings(self, check_title=True, stop_on_errors=True):
         try:
-            self.get_rt_url_from_google()
+            self.get_rt_url_from_search()
             self.get_ratings_from_rt_url()
         except Exception as e:
-            logger.exception(e)
-            self.error = str(e)
+            if stop_on_errors:
+                raise e
+            else:
+                logger.exception(e)
+                self.error = str(e)
         return self.format_results(check_title=check_title)
 
     @staticmethod
     def strip_punctuation(s):
         return re.sub(r'[^\w\s]', '', str(s)).lower()
 
-    def get_rt_url_from_google(self, check_title=True):
+    def _is_match(self, r_dict):
+        results_title = self.strip_punctuation(r_dict['title'])
+        input_title_parts = self.strip_punctuation(self.movie_name).split()
+        if all([w in results_title or
+                w in self.allowed_missing_words
+                for w in input_title_parts]) \
+                and 'rottentomatoes.com/m/' in r_dict['link']:
+            return True
 
-        first_page_results = get_first_page_google_results(
-            f'movie {self.movie_name} rotten tomatoes {self.year}')
+    def get_rt_url_from_search(self, check_title=True):
+
+        first_page_results = search.GoogleFirstPage.get_results(self._search_query())
+        # first_page_results = search.DDGFirstPage.get_results(self._search_query())
 
         rt_url = None
 
         if check_title:
             for r_dict in first_page_results:
-                google_title = self.strip_punctuation(r_dict['title'])
-                input_title_parts = self.strip_punctuation(self.movie_name).split()
-                if all([w in google_title for w in input_title_parts]) \
-                        and 'rottentomatoes.com/m/' in r_dict['link']:
-                   rt_url = r_dict['link']
+                if self._is_match(r_dict):
+                    rt_url = r_dict['link']
+                    break
 
         if rt_url is None:
             if check_title:
                 logger.warn(f"Couldn't find exact match in first page of "
-                            f"google results for {self.movie_name}, "
+                            f"search results for {self.movie_name}, "
                             f"trying first result as fallback")
             rt_url = first_page_results[0]['link']
 
@@ -58,7 +73,9 @@ class RTScraper:
 
     def get_ratings_from_rt_url(self):
         resp = requests.get(self.rt_url)
+        self._scrape_rt_response(resp)
 
+    def _scrape_rt_response(self, resp):
         sel = Selector(text=resp.text)
 
         # critics

@@ -13,6 +13,23 @@ class Movie(dict):
     def json_path(self, dir):
         return os.path.join(dir, f"{self['_id']}.json")
 
+    def load_from_disk(self, dir):
+        path = self.json_path(dir)
+        if os.path.exists(path):
+            with open(path, 'rt') as f:
+                m = json.load(f)
+                self.update(m)
+                return True
+
+    def rt_data(self):
+        return self.get('rotten_tomatoes')
+
+    def rt_critics(self):
+        return self.get('rotten_tomatoes', {}).get('critics_rating')
+
+    def rt_audience(self):
+        return self.get('rotten_tomatoes', {}).get('audience_rating')
+
     def id(self):
         return self['_id']
 
@@ -45,6 +62,14 @@ class MoviesStore:
     @classmethod
     def exists(cls, m):
         return os.path.exists(cls.movie_json_path(m))
+
+    @classmethod
+    def has_full_rt_data(cls, m):
+        movie = Movie(m)
+        if movie.load_from_disk(MOVIES_DIR):
+            return movie.rt_critics() is not None and \
+                   movie.rt_audience() is not None
+        return False
 
     def save_movies(self, overwrite=False):
         [self.save_movie(m, overwrite=overwrite) for m in self.movies.values()]

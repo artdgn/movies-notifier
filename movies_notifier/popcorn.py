@@ -1,4 +1,5 @@
 import math
+import random
 
 import requests
 import time
@@ -17,6 +18,10 @@ class PopcornWithRT:
     sort_map = {'l': 'last added',
                 'p': 'pupularity',
                 't': 'trending'}
+
+    def __init__(self, request_delay_range='5-30', stop_on_errors=True):
+        self.request_delay_range = [int(s) for s in request_delay_range.split('-')]
+        self.stop_on_errors = stop_on_errors
 
     @classmethod
     def _sort_param(cls, sort_str):
@@ -50,58 +55,65 @@ class PopcornWithRT:
         })
 
 
-    @classmethod
-    def get_new_movies(cls,
+    def get_new_movies(self,
                        movies_offset_range = (1, 100),
-                       request_delay = 3,
                        skip_func=None,
                        sort='l',
-                       stop_on_stale_page=True):
+                       stop_on_stale_page=True,
+                       save_func=None):
 
         new_movies = {}  #using dict or deduplication as API sometimes returns duplicates
 
-        start_page = math.floor(movies_offset_range[0] / cls.N_MOVIES_PAGE) + 1
-        end_page = math.ceil(movies_offset_range[1] / cls.N_MOVIES_PAGE)
+        start_page = math.floor(movies_offset_range[0] / self.N_MOVIES_PAGE) + 1
+        end_page = math.ceil(movies_offset_range[1] / self.N_MOVIES_PAGE)
 
         in_offset_range = lambda i, j: \
-            movies_offset_range[0] <= ((i - 1) * cls.N_MOVIES_PAGE + j + 1) <= movies_offset_range[1]
+            movies_offset_range[0] <= ((i - 1) * self.N_MOVIES_PAGE + j + 1) <= movies_offset_range[1]
 
         for i in range(start_page, end_page + 1):
 
-            page_movies = cls.get_popcorn_movies(i, sort=sort)
+            page_movies = self.get_popcorn_movies(i, sort=sort)
             new_movies_on_page = 0
 
             for j, m in enumerate(page_movies):
 
                 if skip_func is not None and skip_func(m):
+                    logger.info(f"Skipping: {m['title']}")
                     continue
 
                 new_movies_on_page += 1
 
                 if in_offset_range(i, j):
 
-                    cls.add_info_fields(m, page=i, index=j)
+                    self.add_info_fields(m, page=i, index=j)
 
-                    cls.add_rt_fields(m, scrape_delay=request_delay)
+                    self.add_rt_fields(m)
 
                     new_movies[m['_id']] = m
+
+                    if save_func is not None:
+                        save_func(m)
 
             if stop_on_stale_page and not new_movies_on_page:
                 break
 
-            time.sleep(request_delay)
+            self.request_delay()
 
         logger.info(f'Got {len(new_movies)} new movies from popcorn API')
 
         return list(new_movies.values())
 
-    @staticmethod
-    def add_rt_fields(m, scrape_delay=3, overwrite=True):
+    def add_rt_fields(self, m, overwrite=True):
         if overwrite or 'rotten_tomatoes' not in m:
-            ratings = RTScraper(movie_name=m['title'], year=m['year']).get_ratings()
+            ratings = RTScraper(
+                movie_name=m['title'], year=m['year']).\
+                get_ratings(stop_on_errors=self.stop_on_errors)
             m.update({'rotten_tomatoes': ratings})
             logger.info(f"Got {ratings} for {m['title']}")
-            time.sleep(scrape_delay)
+            self.request_delay()
+
+    def request_delay(self):
+        time.sleep(random.randint(*self.request_delay_range))
 
 
 

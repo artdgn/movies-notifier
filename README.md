@@ -3,7 +3,7 @@
 ### What is this:
 A tool that:
 1. Checks what new movies are available for download (from Popcorn-API)
-2. Checks their ratings on Rotten Tomatoes (gets there by scraping google search).
+2. Checks their ratings on Rotten Tomatoes (gets there by scraping search results).
 3. Sends a notification email via Mailgun service if there are any good* movies with their details.
 
 \* good - currently defined as having critics and audience ratings both higher than 80%.

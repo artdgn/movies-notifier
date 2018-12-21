@@ -11,6 +11,8 @@ class RTScraper:
 
     allowed_missing_words = ['the']
 
+    movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'
+
     def __init__(self, movie_name, year):
         self.movie_name = movie_name
         self.year = year
@@ -22,7 +24,7 @@ class RTScraper:
         self.error = None
 
     def _search_query(self):
-        return f'movie {self.movie_name} {self.year} site:www.rottentomatoes.com'
+        return f'{self.movie_name} {self.year} site:www.rottentomatoes.com'
 
     def get_ratings(self, check_title=True, stop_on_errors=True):
         try:
@@ -46,7 +48,7 @@ class RTScraper:
         if all([w in results_title or
                 w in self.allowed_missing_words
                 for w in input_title_parts]) \
-                and 'rottentomatoes.com/m/' in r_dict['link']:
+                and re.fullmatch(self.movie_page_url_patten,  r_dict['link']) is not None:
             return True
 
     def get_rt_url_from_search(self, check_title=True):

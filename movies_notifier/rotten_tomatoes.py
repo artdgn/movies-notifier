@@ -11,7 +11,7 @@ class RTScraper:
 
     allowed_missing_words = ['the']
 
-    movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'
+    movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'  # no slashes after /m/
 
     def __init__(self, movie_name, year):
         self.movie_name = movie_name
@@ -42,33 +42,27 @@ class RTScraper:
     def strip_punctuation(s):
         return re.sub(r'[^\w\s]', '', str(s)).lower()
 
-    def _is_match(self, r_dict):
+    def _match_score(self, r_dict):
         results_title = self.strip_punctuation(r_dict['title'])
         input_title_parts = self.strip_punctuation(self.movie_name).split()
-        if all([w in results_title or
-                w in self.allowed_missing_words
-                for w in input_title_parts]) \
-                and re.fullmatch(self.movie_page_url_patten,  r_dict['link']) is not None:
-            return True
+        score = 0
+        if re.fullmatch(self.movie_page_url_patten, r_dict['link']) is not None:
+            score += sum([w in results_title or w in self.allowed_missing_words
+                 for w in input_title_parts])
+        return score
 
-    def get_rt_url_from_search(self, check_title=True):
+    def get_rt_url_from_search(self):
 
         first_page_results = search.GoogleFirstPage.get_results(self._search_query())
         # first_page_results = search.DDGFirstPage.get_results(self._search_query())
 
-        rt_url = None
+        best_match = max(first_page_results, key=self._match_score)
+        rt_url = best_match['link']
 
-        if check_title:
-            for r_dict in first_page_results:
-                if self._is_match(r_dict):
-                    rt_url = r_dict['link']
-                    break
-
-        if rt_url is None:
-            if check_title:
-                logger.warn(f"Couldn't find exact match in first page of "
-                            f"search results for {self.movie_name}, "
-                            f"trying first result as fallback")
+        if self._match_score(best_match) is 0:
+            logger.warn(f"Couldn't find exact match in first page of "
+                        f"search results for {self.movie_name}, "
+                        f"trying first result as fallback")
             rt_url = first_page_results[0]['link']
 
         self.rt_url = rt_url

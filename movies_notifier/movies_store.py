@@ -131,7 +131,8 @@ class MoviesStore:
         linkifier = lambda link_text: lambda l: \
             f'<a href="{l}" target="_blank">{link_text}</a>'
         for col in ['rt_url', 'magnet_720p', 'magnet_1080p']:
-            df[col] = df[col].apply(linkifier(col))
+            if col in df.columns:
+                df[col] = df[col].apply(linkifier(col))
 
         pd.set_option('display.max_colwidth', -1)  # to prevent long links from getting truncated
         return df.to_html(index=None, escape=False)

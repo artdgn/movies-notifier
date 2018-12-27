@@ -14,9 +14,11 @@ parser.add_argument("-n", "--n-movies", type=int, default=200,
                     help="number of recent movies to check (default 200)")
 parser.add_argument("-f", "--first-offset", type=int, default=1,
                     help="offset from which to start checking (default 1)")
-parser.add_argument("-s", "--sort", type=str, default="l",
-                    help="type of sort for popcorn-api. default 'l' (last added). "
-                         "other options: 't' (trending), 'p' (popularity).")
+parser.add_argument("-s", "--sort", type=str, default="ltp",
+                    help="type of sort for popcorn-api. default 'ltp' "
+                         "(last added + trending + popularity: all three will be checked). "
+                         "other options: 'l' (last added), 't' (trending), 'p' (popularity) "
+                         "or any mix of those.")
 parser.add_argument("-o", "--overwrite", action="store_true",
                     help="whether to rescrape and overwrite files with no RT data")
 parser.add_argument("-d", "--delay-range", type=str, default='61-120',

@@ -27,20 +27,34 @@ class PopcornWithRT:
     def _sort_param(cls, sort_str):
         sort_str = sort_str.strip()
         if sort_str in cls.sort_map.values():
+            # full string option
             return sort_str
         elif sort_str in cls.sort_map:
+            # abbreviated option
             return cls.sort_map[sort_str]
         else:
             raise ValueError(f'Unknown value for sort type: {sort_str}')
+
+    @classmethod
+    def _sorts_from_str(cls, sort_str):
+        sort_str = sort_str.strip()
+        if all([c in cls.sort_map for c in sort_str]):
+            # concatenation of several options
+            return [cls._sort_param(c) for c in sort_str]
+        else:
+            return [cls._sort_param(sort_str)]
 
     @classmethod
     def get_popcorn_movies(cls, page, sort='last added'):
         resp = requests.get(f'{cls.POPCORN_API_URI}/movies/{page}',
                               params={'sort': cls._sort_param(sort), 'order': -1})
         if resp.ok:
+            logger.info(f'Got {page} page from Popcorn for '
+                        f'sort={cls._sort_param(sort)}')
             movies = resp.json()
         else:
-            logger.error(f'Failed getting {page} from Popcorn: {resp}')
+            logger.error(f'Failed getting {page} from Popcorn '
+                         f'for sort={cls._sort_param(sort)}: {resp}')
             movies = []
         return movies
 
@@ -54,13 +68,29 @@ class PopcornWithRT:
             'magnet_720p': m['torrents'].get('en', {}).get('720p', {}).get('url')
         })
 
-
     def get_new_movies(self,
                        movies_offset_range = (1, 100),
                        skip_func=None,
                        sort='l',
                        stop_on_stale_page=True,
                        save_func=None):
+
+        new_movies = {}
+        for s in self._sorts_from_str(sort_str=sort):
+            new_movies.update(self._new_movies_for_sort(
+                sort=s,
+                movies_offset_range=movies_offset_range,
+                skip_func=skip_func,
+                stop_on_stale_page=stop_on_stale_page,
+                save_func=save_func))
+        return list(new_movies.values())
+
+    def _new_movies_for_sort(self,
+                            movies_offset_range = (1, 100),
+                            skip_func=None,
+                            sort='l',
+                            stop_on_stale_page=True,
+                            save_func=None):
 
         new_movies = {}  #using dict or deduplication as API sometimes returns duplicates
 
@@ -101,7 +131,7 @@ class PopcornWithRT:
 
         logger.info(f'Got {len(new_movies)} new movies from popcorn API')
 
-        return list(new_movies.values())
+        return new_movies
 
     def add_rt_fields(self, m, overwrite=True):
         if overwrite or 'rotten_tomatoes' not in m:

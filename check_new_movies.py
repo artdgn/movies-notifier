@@ -41,9 +41,6 @@ new_movies = PopcornWithRT(
         save_func=functools.partial(m_store.add_movie, save=True, overwrite=args.overwrite)
         )
 
-# m_store.add_movies(
-#     new_movies, save=True, overwrite=args.overwrite)
-
 good_movies = select_good_movies(m_store.movies.values())
 
 notification_backend = 'none' if args.no_email else 'mailgun'

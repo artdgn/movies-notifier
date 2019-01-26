@@ -44,6 +44,7 @@ class Notifier:
                 logger.info(f'Only "mailgun" email notification backend supported '
                             f'({self.backend} supplied), printing results instead:')
                 self.log_notifications(subject=subject, text=text)
+        return to_send
 
     @staticmethod
     def log_notifications(subject, text):

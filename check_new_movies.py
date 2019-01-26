@@ -30,6 +30,7 @@ args = parser.parse_args()
 
 m_store = MoviesStore()
 
+# get new movies
 new_movies = PopcornWithRT(
     request_delay_range=args.delay_range,
     stop_on_errors=True).\
@@ -41,10 +42,14 @@ new_movies = PopcornWithRT(
         save_func=functools.partial(m_store.add_movie, save=True, overwrite=args.overwrite)
         )
 
+# select good movies
 good_movies = select_good_movies(m_store.movies.values())
 
+# notify
 notification_backend = 'none' if args.no_email else 'mailgun'
-notification_resp = \
+notified_movies = \
     Notifier(backend=notification_backend).\
     notify(good_movies, resend=args.resend_notifications)
 
+# html table
+m_store.write_html_table_for_list(notified_movies)

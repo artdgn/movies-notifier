@@ -8,6 +8,8 @@ LOG_DIR = os.path.join(ROOT_DIR, 'data/logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 SENT_DIR = os.path.join(ROOT_DIR, 'data/sent')
 os.makedirs(SENT_DIR, exist_ok=True)
+HTML_DIR = os.path.join(ROOT_DIR, 'data/html')
+os.makedirs(HTML_DIR, exist_ok=True)
 
 CURRENT_TIMESTAMP = datetime.datetime.now().isoformat()
 CURRENT_DATE = datetime.datetime.now().date().isoformat()

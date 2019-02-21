@@ -13,9 +13,10 @@ class RTScraper:
 
     movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'  # no slashes after /m/
 
-    def __init__(self, movie_name, year):
+    def __init__(self, movie_name, year, search_engine='d'):
         self.movie_name = movie_name
         self.year = year
+        self.search_engine = search_engine
         self.rt_url = None
         self.critics_rating = None
         self.audience_rating = None
@@ -53,8 +54,12 @@ class RTScraper:
 
     def get_rt_url_from_search(self):
 
-        first_page_results = search.GoogleFirstPage.get_results(self._search_query())
-        # first_page_results = search.DDGFirstPage.get_results(self._search_query())
+        if self.search_engine.startswith('d'):
+            first_page_results = search.DDGFirstPage.get_results(self._search_query())
+        elif self.search_engine.startswith('g'):
+            first_page_results = search.GoogleFirstPage.get_results(self._search_query())
+        else:
+            raise ValueError(f'Unknown search-engine option: {self.search_engine}')
 
         best_match = max(first_page_results, key=self._match_score)
         rt_url = best_match['link']

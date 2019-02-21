@@ -19,9 +19,13 @@ class PopcornWithRT:
                 'p': 'pupularity',
                 't': 'trending'}
 
-    def __init__(self, request_delay_range='5-30', stop_on_errors=True):
+    def __init__(self,
+                 request_delay_range='5-30',
+                 stop_on_errors=True,
+                 search_engine='d'):
         self.request_delay_range = [int(s) for s in request_delay_range.split('-')]
         self.stop_on_errors = stop_on_errors
+        self.search_engine = search_engine
 
     @classmethod
     def _sort_param(cls, sort_str):
@@ -136,8 +140,11 @@ class PopcornWithRT:
     def add_rt_fields(self, m, overwrite=True):
         if overwrite or 'rotten_tomatoes' not in m:
             ratings = RTScraper(
-                movie_name=m['title'], year=m['year']).\
-                get_ratings(stop_on_errors=self.stop_on_errors)
+                movie_name=m['title'],
+                year=m['year'],
+                search_engine=self.search_engine
+            ).get_ratings(stop_on_errors=self.stop_on_errors)
+
             m.update({'rotten_tomatoes': ratings})
             logger.info(f"Got {ratings} for {m['title']}")
             self.request_delay()

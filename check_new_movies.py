@@ -19,6 +19,9 @@ parser.add_argument("-s", "--sort", type=str, default="ltp",
                          "(last added + trending + popularity: all three will be checked). "
                          "other options: 'l' (last added), 't' (trending), 'p' (popularity) "
                          "or any mix of those.")
+parser.add_argument("-e", "--search-engine", type=str, default="d",
+                    help="which search engine to use to find the RT page."
+                         "d: duck-duck-go, g: google.")
 parser.add_argument("-o", "--overwrite", action="store_true",
                     help="whether to rescrape and overwrite files with no RT data")
 parser.add_argument("-d", "--delay-range", type=str, default='61-120',
@@ -33,6 +36,7 @@ m_store = MoviesStore()
 # get new movies
 new_movies = PopcornWithRT(
     request_delay_range=args.delay_range,
+    search_engine=args.search_engine,
     stop_on_errors=True).\
     get_new_movies(
         movies_offset_range=(args.first_offset, args.first_offset + args.n_movies),

@@ -7,7 +7,7 @@ from parsel import Selector
 from movies_notifier.logger import logger
 
 HEADERS = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-                         '(KHTML, like Gecko) Chrome/33.0.1750.149 Safari/537.36'}
+                         '(KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
 
 
 ## if blocked should look into https://asciimoo.github.io/searx/index.html

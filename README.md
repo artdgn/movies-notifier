@@ -33,6 +33,7 @@ A tool that:
 
 
 ### Still to do:
+* use headless browser / another search engine
 * circleci to push docker image automatically
 * find a way to send full scrape table (S3? free file hosting? API in lambda?)
 * add more sophisitcated movie selection logic (perhaps some tiers of relevance).

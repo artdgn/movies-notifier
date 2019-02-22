@@ -6,7 +6,7 @@ A tool that:
 2. Checks their ratings on Rotten Tomatoes (gets there by scraping search results).
 3. Sends a notification email via Mailgun service if there are any good* movies with their details.
 
-\* good - currently defined as having critics and audience ratings both higher than 80%.
+\* good - currently defined as having critics and audience ratings average higher than 80%.
 
 
 ### To run this:
@@ -33,9 +33,6 @@ A tool that:
 
 
 ### Still to do:
-* use headless browser / another search engine
-* circleci to push docker image automatically
-* find a way to send full scrape table (S3? free file hosting? API in lambda?)
 * add more sophisitcated movie selection logic (perhaps some tiers of relevance).
 * scrape ciritics reviews and calculate directly when there are too few reviews for a "tomatometer".
 

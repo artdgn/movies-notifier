@@ -2,3 +2,4 @@ setuptools==39.0.1
 pandas==0.23.1
 requests==2.20.0
 parsel==1.4.0
+browsercookie==0.7.5

@@ -3,6 +3,7 @@ import urllib
 
 import requests
 from parsel import Selector
+from browsercookie import chrome as chrome_cookies
 
 from movies_notifier.logger import logger
 
@@ -10,24 +11,33 @@ HEADERS = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
                          '(KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'}
 
 
-## if blocked should look into https://asciimoo.github.io/searx/index.html
+class Scraper:
 
+    def __init__(self, search_setting):
+        self.cookiejar = None
+        self._engine = None
+        if 'cookies' in search_setting:
+            self.cookiejar = chrome_cookies()
 
-class GoogleFirstPage:
+        if search_setting.startswith('d'):
+            self._engine = DuckDuckGo()
+        elif search_setting.startswith('g'):
+            self._engine = Google()
+        else:
+            raise ValueError(f'Unknown search-engine option: {search_setting}')
 
-    @classmethod
-    def get_results(cls, query):
+    def get_results(self, query):
 
         results = []
 
-        resp = cls._request(query)
+        resp = self._engine.request(query, cookies=self.cookiejar)
 
         if not resp.ok:
             logger.error(f'Bad response from search: {resp}')
             raise RuntimeError(f'Bad response from search: {resp}')
 
         try:
-            results = cls._parse_page(resp)
+            results = self._engine.parse_page(resp)
 
             if len(results) < 5:
                 raise RuntimeError('too few results successfully parsed')
@@ -41,13 +51,17 @@ class GoogleFirstPage:
 
         return results
 
-    @classmethod
-    def _request(cls, query):
-        params = {'q': query}
-        return requests.get('https://www.google.com/search', headers=HEADERS, params=params)
 
-    @classmethod
-    def _parse_page(cls, resp):
+class Google:
+
+    @staticmethod
+    def request(query, cookies=None):
+        params = {'q': query}
+        return requests.get('https://www.google.com/search',
+                            headers=HEADERS, params=params, cookies=cookies)
+
+    @staticmethod
+    def parse_page(resp):
         results = []
         sel = Selector(text=resp.text)
         for i in range(1, 11):
@@ -65,22 +79,23 @@ class GoogleFirstPage:
             results.append({'link': link, 'title': title})
         return results
 
-    @classmethod
-    def im_feeling_lucky(cls, query):
+    @staticmethod
+    def im_feeling_lucky(query, cookies=None):
         params = {'q': query, 'btnI': 'I'}
         return requests.get('https://www.google.com/search',
-                            headers=HEADERS, params=params)
+                            headers=HEADERS, params=params, cookies=cookies)
 
 
-class DDGFirstPage(GoogleFirstPage):
+class DuckDuckGo:
 
-    @classmethod
-    def _request(cls, query):
+    @staticmethod
+    def request(query, cookies=None):
         params = {'q': query}
-        return requests.get('https://www.duckduckgo.com/html/', headers=HEADERS, params=params)
+        return requests.get('https://www.duckduckgo.com/html/',
+                            headers=HEADERS, params=params, cookies=cookies)
 
-    @classmethod
-    def _parse_page(cls, resp):
+    @staticmethod
+    def parse_page(resp):
         results = []
         sel = Selector(text=resp.text)
         for i in range(1, 11):

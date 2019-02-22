@@ -19,9 +19,9 @@ parser.add_argument("-s", "--sort", type=str, default="ltp",
                          "(last added + trending + popularity: all three will be checked). "
                          "other options: 'l' (last added), 't' (trending), 'p' (popularity) "
                          "or any mix of those.")
-parser.add_argument("-e", "--search-engine", type=str, default="d",
-                    help="which search engine to use to find the RT page."
-                         "d: duck-duck-go, g: google.")
+parser.add_argument("-e", "--search-engine", type=str, default="g-cookies",
+                    help="which search engine to use to find the RT page and whether to use browser cookies."
+                         "d: duck-duck-go, g: google. g-cookies: google chrome with your cookies.. ")
 parser.add_argument("-o", "--overwrite", action="store_true",
                     help="whether to rescrape and overwrite files with no RT data")
 parser.add_argument("-d", "--delay-range", type=str, default='61-120',

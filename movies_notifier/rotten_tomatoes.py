@@ -11,7 +11,7 @@ class RTScraper:
 
     allowed_missing_words = ['the']
 
-    movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'  # no slashes after /m/
+    _movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'  # no slashes after /m/
 
     def __init__(self, movie_name, year, search_engine='g-cookies'):
         self.movie_name = movie_name
@@ -40,26 +40,36 @@ class RTScraper:
         return self.format_results(check_title=check_title)
 
     @staticmethod
-    def strip_punctuation(s):
-        return re.sub(r'[^\w\s]', '', str(s)).lower()
+    def normalise_title(s):
+        return ' '.join(re.sub(r'[^\w\s]', '', str(s)).lower().split())
 
-    def _match_score(self, r_dict):
-        results_title = self.strip_punctuation(r_dict['title'])
-        input_title_parts = self.strip_punctuation(self.movie_name).split()
-        score = 0
-        if re.fullmatch(self.movie_page_url_patten, r_dict['link']) is not None:
-            score += sum([w in results_title or w in self.allowed_missing_words
-                 for w in input_title_parts])
+    def _url_check(self, url):
+        return re.fullmatch(self._movie_page_url_patten, url) is not None
+
+    def _title_similarity_score(self, candidate, target):
+        cand_parts = self.normalise_title(candidate).split()
+        target = self.normalise_title(target)
+        if not cand_parts or not target:
+            return 0
+        score = sum([w in target or w in self.allowed_missing_words
+                  for w in cand_parts])
+        return score / max(len(target.split()), len(cand_parts))
+
+    def _match_search_result(self, r_dict):
+        score = self._title_similarity_score(
+            candidate=r_dict['title'], target=self.movie_name)
+        if not self._url_check(r_dict['link']):
+            score *= 0.75
         return score
 
     def get_rt_url_from_search(self):
 
         first_page_results = self.search_scraper.get_results(self._search_query())
 
-        best_match = max(first_page_results, key=self._match_score)
+        best_match = max(first_page_results, key=self._match_search_result)
         rt_url = best_match['link']
 
-        if self._match_score(best_match) is 0:
+        if self._match_search_result(best_match) is 0:
             logger.warn(f"Couldn't find exact match in first page of "
                         f"search results for {self.movie_name}, "
                         f"trying first result as fallback")
@@ -102,14 +112,13 @@ class RTScraper:
         if self.error:
             res['error'] = self.error
 
-        if not self.error and check_title \
-                and self.strip_punctuation(self.movie_name) \
-                not in self.strip_punctuation(self.title):
+        if not self.error and check_title and \
+                self._title_similarity_score(candidate=self.title, target=self.movie_name) <= 0.8:
             res['critics_rating'] = None
             res['audience_rating'] = None
             err_msg = f'RT title and input title are different: ' \
-                      f'{self.strip_punctuation(self.title)} ' \
-                      f'!= {self.strip_punctuation(self.movie_name)}'
+                      f'{self.normalise_title(self.title)} ' \
+                      f'!= {self.normalise_title(self.movie_name)}'
             res['error'] = err_msg
             logger.error(err_msg)
         return res

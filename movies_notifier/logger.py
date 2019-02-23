@@ -3,7 +3,7 @@ import logging
 
 from movies_notifier.common import LOG_FILEPATH
 
-logFormatter = logging.Formatter("[%(asctime)s %(levelname)s] %(message)s", datefmt='%H:%M')
+logFormatter = logging.Formatter("[%(asctime)s %(levelname)s] %(message)s", datefmt='%H:%M:%S')
 logger = logging.getLogger()
 
 # level

@@ -128,6 +128,8 @@ class PopcornWithRT:
                     if save_func is not None:
                         save_func(m)
 
+                    self.request_delay()
+
             if stop_on_stale_page and not new_movies_on_page:
                 break
 
@@ -147,7 +149,6 @@ class PopcornWithRT:
 
             m.update({'rotten_tomatoes': ratings})
             logger.info(f"Got {ratings} for {m['title']}")
-            self.request_delay()
 
     def request_delay(self):
         time.sleep(random.randint(*self.request_delay_range))

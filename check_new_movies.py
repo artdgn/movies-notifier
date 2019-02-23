@@ -56,4 +56,5 @@ notified_movies = \
     notify(good_movies, resend=args.resend_notifications)
 
 # html table
-m_store.write_html_table_for_list(notified_movies)
+if notified_movies:
+    m_store.write_html_table_for_list(notified_movies)

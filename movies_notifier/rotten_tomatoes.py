@@ -85,15 +85,15 @@ class RTScraper:
         sel = Selector(text=resp.text)
 
         # critics
-        self.critics_rating = sel.css('#tomato_meter_link '
-                               '.superPageFontColor span::text').extract_first() or ''
+        self.critics_rating = sel.css('#tomato_meter_link .mop-ratings-wrap__percentage::text').extract_first() or ''
+        self.critics_rating = self.critics_rating.strip()[:-1]
+
         # audience
-        self.audience_rating = sel.css('.meter-value '
-                                '.superPageFontColor::text').extract_first() or ''
-        self.audience_rating = self.audience_rating[:-1]
+        self.audience_rating = sel.css('.mop-ratings-wrap__percentage--audience::text').extract_first() or ''
+        self.audience_rating = self.audience_rating.strip()[:-1]
 
         # title (to make sure we have the right movie)
-        self.title = sel.css('#movie-title::text').extract_first() or ''
+        self.title = sel.css('.mop-ratings-wrap__title--top::text').extract_first() or ''
         self.title = self.title.strip()
 
         # synopsis

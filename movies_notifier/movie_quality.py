@@ -1,22 +1,27 @@
+import typing
 from movies_notifier.logger import logger
+from movies_notifier.movies_store import Movie
 
 
-def select_good_movies(movies, critics_threshold=70, audience_threshold=70, mean_threshold=80):
+def select_good_movies(movies: typing.List[Movie],
+                       critics_threshold=70,
+                       audience_threshold=70,
+                       mean_threshold=80,
+                       one_none_threshold=95):
     good_movies = []
     for m in movies:
-        rt_data = m['rotten_tomatoes']
+        critics = int(m.rt_critics()) if m.rt_critics() else None
+        audience = int(m.rt_audience()) if m.rt_audience() else None
 
-        if not rt_data['critics_rating'] or not rt_data['audience_rating']:
+        if critics and critics < critics_threshold:
             continue
 
-        critics = int(rt_data['critics_rating'])
-        audience = int(rt_data['audience_rating'])
-        mean = (critics + audience) / 2
+        if audience and audience < audience_threshold:
+            continue
 
-        if critics >= critics_threshold and \
-                audience >= audience_threshold \
-                and mean >= mean_threshold:
-
+        ratings = [r for r in [critics, audience] if isinstance(r, int)]
+        if ratings and (sum(ratings) / 2 >= mean_threshold or
+                        min(ratings) >= one_none_threshold):
             good_movies.append(m)
 
     logger.info(f'Selected {len(good_movies)} good movies from {len(movies)} movies')

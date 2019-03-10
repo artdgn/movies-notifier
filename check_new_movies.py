@@ -40,7 +40,7 @@ new_movies = PopcornWithRT(
     stop_on_errors=True).\
     get_new_movies(
         movies_offset_range=(args.first_offset, args.first_offset + args.n_movies),
-        skip_func=m_store.has_full_rt_data if args.overwrite else m_store.exists,
+        skip_func=m_store.has_rt_data if args.overwrite else m_store.exists,
         sort=args.sort,
         stop_on_stale_page=True,
         save_func=functools.partial(m_store.add_movie, save=True, overwrite=args.overwrite)

@@ -65,11 +65,10 @@ class MoviesStore:
         return os.path.exists(cls.movie_json_path(m))
 
     @classmethod
-    def has_full_rt_data(cls, m):
+    def has_rt_data(cls, m):
         movie = Movie(m)
         if movie.load_from_disk(MOVIES_DIR):
-            return movie.rt_critics() is not None and \
-                   movie.rt_audience() is not None
+            return movie.rt_critics() or movie.rt_audience()
         return False
 
     def save_movies(self, overwrite=False):

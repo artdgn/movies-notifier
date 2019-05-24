@@ -17,7 +17,10 @@ class PopcornWithRT:
 
     sort_map = {'l': 'last added',
                 'p': 'pupularity',
-                't': 'trending'}
+                't': 'trending',
+                'y': 'year',
+                'r': 'rating',
+                }
 
     def __init__(self,
                  request_delay_range='5-30',
@@ -42,6 +45,10 @@ class PopcornWithRT:
     @classmethod
     def _sorts_from_str(cls, sort_str):
         sort_str = sort_str.strip()
+
+        if sort_str == 'all':
+            sort_str = ''.join(cls.sort_map.keys())
+
         if all([c in cls.sort_map for c in sort_str]):
             # concatenation of several options
             return [cls._sort_param(c) for c in sort_str]
@@ -53,7 +60,7 @@ class PopcornWithRT:
         resp = requests.get(f'{cls.POPCORN_API_URI}/movies/{page}',
                               params={'sort': cls._sort_param(sort), 'order': -1})
         if resp.ok:
-            logger.info(f'Got {page} page from Popcorn for '
+            logger.info(f'Got page {page} from Popcorn for '
                         f'sort={cls._sort_param(sort)}')
             movies = resp.json()
         else:

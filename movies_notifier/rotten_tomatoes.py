@@ -1,3 +1,4 @@
+import json
 import re
 import requests
 
@@ -13,13 +14,17 @@ class RTScraper:
 
     _movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'  # no slashes after /m/
 
+    _audience_api = 'https://www.rottentomatoes.com/napi/audienceScore/'
+
     def __init__(self, movie_name, year, search_engine='g-cookies'):
         self.movie_name = movie_name
         self.year = year
-        self.search_scraper = movies_notifier.search.Scraper(search_setting=search_engine)
+        self.search_scraper = movies_notifier.search.Scraper(
+            search_setting=search_engine)
         self.rt_url = None
         self.critics_rating = None
         self.audience_rating = None
+        self.critics_avg_score = None
         self.title = None
         self.synopsis = None
         self.error = None
@@ -84,26 +89,56 @@ class RTScraper:
     def _scrape_rt_response(self, resp):
         sel = Selector(text=resp.text)
 
-        # critics
-        self.critics_rating = sel.css('#tomato_meter_link .mop-ratings-wrap__percentage::text').extract_first() or ''
-        self.critics_rating = self.critics_rating.strip()[:-1]
+        self.critics_data = self._get_full_critics_data(resp)
+        self.critics_rating = self.critics_data.get(
+            'tomatometerAllCritics', {}).get('score', '')
+        self.critics_avg_score = self.critics_data.get(
+            'tomatometerAllCritics', {}).get('avgScore', '')
 
-        # audience
-        self.audience_rating = sel.css('.mop-ratings-wrap__percentage--audience::text').extract_first() or ''
-        self.audience_rating = self.audience_rating.strip()[:-1]
+        if not self.critics_rating:  # try css
+            self.critics_rating = sel.css(
+                '#tomato_meter_link .mop-ratings-wrap__percentage::text').extract_first() or ''
+            self.critics_rating = self.critics_rating.strip()[:-1]
 
-        # title (to make sure we have the right movie)
-        self.title = sel.css('.mop-ratings-wrap__title--top::text').extract_first() or ''
-        self.title = self.title.strip()
+        self.audience_data = self._get_full_audience_data(resp)
+        self.audience_rating = self.audience_data.get(
+            'audienceScoreAll', {}).get('score', '')
+
+        self.title = self.critics_data.get(
+            'tomatometerAllCritics', {}).get('title', '')
+        if not self.title:  # try css
+            self.title = sel.css('.mop-ratings-wrap__title--top::text').extract_first() or ''
+            self.title = self.title.strip()
 
         # synopsis
         self.synopsis = sel.css('#movieSynopsis::text').extract_first() or ''
         self.synopsis = self.synopsis.strip()
 
+    def _get_full_critics_data(self, resp):
+        try:
+            si_str = 'root.RottenTomatoes.context.scoreInfo'
+            return json.loads(re.findall(f'{si_str} = (.*);', resp.text)[0])
+        except (json.decoder.JSONDecodeError, TypeError, IndexError):
+            logger.error('failed getting structured critics score data')
+            return {}
+
+    def _get_full_audience_data(self, resp):
+        try:
+            fd_str = 'root.RottenTomatoes.context.fandangoData'
+            fd_dict = json.loads(re.findall(f'{fd_str} = (.*);', resp.text)[0])
+            if fd_dict.get('emsId'):
+                resp_aud = requests.get(self._audience_api + fd_dict['emsId'])
+                return resp_aud.json()
+            else:
+                return {}
+        except (IndexError, AttributeError, TypeError):
+            return {}
+
     def format_results(self, check_title=True):
         res = {
             'rt_url': self.rt_url,
             'critics_rating': self.critics_rating,
+            'critics_avg_score': self.critics_avg_score,
             'audience_rating': self.audience_rating,
             'title': self.title,
             # 'synopsis': self.synopsis
@@ -116,6 +151,7 @@ class RTScraper:
                 self._title_similarity_score(candidate=self.title, target=self.movie_name) <= 0.8:
             res['critics_rating'] = None
             res['audience_rating'] = None
+            res['critics_avg_score'] = None
             err_msg = f'RT title and input title are different: ' \
                       f'{self.normalise_title(self.title)} ' \
                       f'!= {self.normalise_title(self.movie_name)}'

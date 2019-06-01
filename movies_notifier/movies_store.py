@@ -68,7 +68,7 @@ class MoviesStore:
     def has_rt_data(cls, m):
         movie = Movie(m)
         if movie.load_from_disk(MOVIES_DIR):
-            return movie.rt_critics() or movie.rt_audience()
+            return movie.rt_critics() and movie.rt_audience()
         return False
 
     def save_movies(self, overwrite=False):
@@ -122,8 +122,10 @@ class MoviesStore:
         df['rotten_tomatoes'] = df['rotten_tomatoes'].apply(json.dumps)
         df = pandas_utils.split_json_field(df, 'rotten_tomatoes')
         df = df.iloc[:, ~df.columns.duplicated()]  # json split creates duplicate title
-        cols_order = ['title', 'year', 'genres', 'critics_rating', 'audience_rating',
-                      'rt_url', 'magnet_1080p', 'magnet_720p', 'error', 'scrape_date']
+        cols_order = ['title', 'year', 'genres', 'critics_rating',
+                      'critics_avg_score', 'audience_rating',
+                      'rt_url', 'magnet_1080p', 'magnet_720p',
+                      'error', 'scrape_date']
         return df.loc[:, cols_order].sort_values('critics_rating', ascending=False)
 
     @staticmethod

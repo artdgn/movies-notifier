@@ -27,8 +27,13 @@ def parse_args():
                         help="whether to rescrape and overwrite files with no RT data")
     parser.add_argument("-d", "--delay-range", type=str, default='61-120',
                         help="delay in seconds between scraping requests (default 61-120)")
+    parser.add_argument("-nf", "--number-consequtive-fails", type=int, default=3,
+                        help="number of consequtive scrape errors after which to stop (default 3)")
     parser.add_argument("--resend-notifications", action="store_true",
                         help="resend notifications for movies that were already in previous notifications")
+    parser.add_argument("-sp", "--stop-on-stale-page", action="store_false",
+                        help="stop scanning popcorn results if one full page is stale")
+
     return parser.parse_args()
 
 
@@ -41,14 +46,14 @@ def main():
     movies_checker = PopcornWithRT(
         request_delay_range=args.delay_range,
         search_engine=args.search_engine,
-        stop_on_errors=True)
+        number_fails_threshold=args.number_consequtive_fails)
 
     new_movies = movies_checker.get_new_movies(
         movies_offset_range=(args.first_offset,
                              args.first_offset + args.n_movies),
         skip_func=m_store.has_rt_data if args.overwrite else m_store.exists,
         sort=args.sort,
-        stop_on_stale_page=True,
+        stop_on_stale_page=args.stop_on_stale_page,
         save_func=functools.partial(m_store.add_movie,
                                     save=True,
                                     overwrite=args.overwrite)

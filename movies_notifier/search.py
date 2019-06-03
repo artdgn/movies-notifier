@@ -50,7 +50,7 @@ class Scraper:
             results = self._engine.parse_page(resp)
 
             if len(results) < 5:
-                raise RuntimeError('too few results successfully parsed')
+                raise RuntimeError(f'too few results successfully parsed: {query}')
 
         except Exception as e:
             logger.exception(str(e))

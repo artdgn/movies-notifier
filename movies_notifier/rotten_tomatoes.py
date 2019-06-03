@@ -23,8 +23,11 @@ class RTScraper:
             search_setting=search_engine)
         self.rt_url = None
         self.critics_rating = None
-        self.audience_rating = None
         self.critics_avg_score = None
+        self.critics_n_reviews = None
+        self.audience_rating = None
+        self.audience_avg_score = None
+        self.audience_n_reviews = None
         self.title = None
         self.synopsis = None
         self.error = None
@@ -32,12 +35,12 @@ class RTScraper:
     def _search_query(self):
         return f'{self.movie_name} {self.year} site:www.rottentomatoes.com'
 
-    def get_ratings(self, check_title=True, stop_on_errors=True):
+    def get_ratings(self, check_title=True, raise_error=True):
         try:
             self.get_rt_url_from_search()
             self.get_ratings_from_rt_url()
         except Exception as e:
-            if stop_on_errors:
+            if raise_error:
                 raise e
             else:
                 logger.exception(e)
@@ -94,6 +97,8 @@ class RTScraper:
             'tomatometerAllCritics', {}).get('score', '')
         self.critics_avg_score = self.critics_data.get(
             'tomatometerAllCritics', {}).get('avgScore', '')
+        self.critics_n_reviews = self.critics_data.get(
+            'tomatometerAllCritics', {}).get('numberOfReviews', '')
 
         if not self.critics_rating:  # try css
             self.critics_rating = sel.css(
@@ -103,6 +108,10 @@ class RTScraper:
         self.audience_data = self._get_full_audience_data(resp)
         self.audience_rating = self.audience_data.get(
             'audienceScoreAll', {}).get('score', '')
+        self.audience_avg_score = self.audience_data.get(
+            'audienceScoreAll', {}).get('averageRating', '')
+        self.audience_n_reviews = self.audience_data.get(
+            'audienceScoreAll', {}).get('reviewCount', '')
 
         self.title = self.critics_data.get(
             'tomatometerAllCritics', {}).get('title', '')
@@ -139,9 +148,11 @@ class RTScraper:
             'rt_url': self.rt_url,
             'critics_rating': self.critics_rating,
             'critics_avg_score': self.critics_avg_score,
+            'critics_n_reviews': self.critics_n_reviews,
             'audience_rating': self.audience_rating,
+            'audience_avg_score': self.audience_avg_score,
+            'audience_n_reviews': self.audience_n_reviews,
             'title': self.title,
-            # 'synopsis': self.synopsis
         }
 
         if self.error:
@@ -150,8 +161,11 @@ class RTScraper:
         if not self.error and check_title and \
                 self._title_similarity_score(candidate=self.title, target=self.movie_name) <= 0.8:
             res['critics_rating'] = None
-            res['audience_rating'] = None
             res['critics_avg_score'] = None
+            res['critics_n_reviews'] = None
+            res['audience_rating'] = None
+            res['audience_avg_score'] = None
+            res['audience_n_reviews'] = None
             err_msg = f'RT title and input title are different: ' \
                       f'{self.normalise_title(self.title)} ' \
                       f'!= {self.normalise_title(self.movie_name)}'

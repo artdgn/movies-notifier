@@ -7,11 +7,19 @@ def select_good_movies(movies: typing.List[Movie],
                        critics_threshold=70,
                        audience_threshold=70,
                        mean_threshold=80,
-                       one_none_threshold=95):
+                       one_none_threshold=95,
+                       critics_n_reviews_threshold=1,
+                       audience_n_reviews_threshold=10,
+                       ):
     good_movies = []
     for m in movies:
-        critics = int(m.rt_critics()) if m.rt_critics() else None
-        audience = int(m.rt_audience()) if m.rt_audience() else None
+        critics, audience = None, None
+
+        if m.rt_critics_rating(critics_n_reviews_threshold):
+            critics = int(m.rt_critics_rating())
+
+        if m.rt_audience_rating(audience_n_reviews_threshold):
+            audience = int(m.rt_audience_rating())
 
         if critics and critics < critics_threshold:
             continue
@@ -24,5 +32,6 @@ def select_good_movies(movies: typing.List[Movie],
                         min(ratings) >= one_none_threshold):
             good_movies.append(m)
 
-    logger.info(f'Selected {len(good_movies)} good movies from {len(movies)} movies')
+    logger.info(f'Selected {len(good_movies)} '
+                f'good movies from {len(movies)} movies')
     return good_movies

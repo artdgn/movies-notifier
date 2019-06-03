@@ -25,11 +25,27 @@ class Movie(dict):
     def rt_data(self):
         return self.get('rotten_tomatoes')
 
-    def rt_critics(self):
-        return self.get('rotten_tomatoes', {}).get('critics_rating')
+    def rt_critics_rating(self, min_n_reviews=0):
+        if (not self.rt_critics_n_reviews() or
+                self.rt_critics_n_reviews() >= min_n_reviews):
+            return self.get('rotten_tomatoes', {}).get('critics_rating')
 
-    def rt_audience(self):
-        return self.get('rotten_tomatoes', {}).get('audience_rating')
+    def rt_critics_avg_score(self):
+        return self.get('rotten_tomatoes', {}).get('critics_avg_score')
+
+    def rt_critics_n_reviews(self):
+        return self.get('rotten_tomatoes', {}).get('critics_n_reviews')
+
+    def rt_audience_rating(self, min_n_reviews=0):
+        if (not self.rt_audience_n_reviews() or
+                self.rt_audience_n_reviews() >= min_n_reviews):
+            return self.get('rotten_tomatoes', {}).get('audience_rating')
+
+    def rt_audience_avg_score(self):
+        return self.get('rotten_tomatoes', {}).get('audience_avg_score')
+
+    def rt_audience_n_reviews(self):
+        return self.get('rotten_tomatoes', {}).get('audience_n_reviews')
 
     def id(self):
         return self['_id']
@@ -68,7 +84,9 @@ class MoviesStore:
     def has_rt_data(cls, m):
         movie = Movie(m)
         if movie.load_from_disk(MOVIES_DIR):
-            return movie.rt_critics() and movie.rt_audience()
+            return (movie.rt_critics_rating() or
+                    movie.rt_audience_rating() or
+                    movie.rt_critics_avg_score())
         return False
 
     def save_movies(self, overwrite=False):
@@ -122,10 +140,12 @@ class MoviesStore:
         df['rotten_tomatoes'] = df['rotten_tomatoes'].apply(json.dumps)
         df = pandas_utils.split_json_field(df, 'rotten_tomatoes')
         df = df.iloc[:, ~df.columns.duplicated()]  # json split creates duplicate title
-        cols_order = ['title', 'year', 'genres', 'critics_rating',
-                      'critics_avg_score', 'audience_rating',
-                      'rt_url', 'magnet_1080p', 'magnet_720p',
-                      'error', 'scrape_date']
+        score_cols = ['critics_rating', 'critics_avg_score', 'critics_n_reviews',
+                      'audience_rating', 'audience_avg_score', 'audience_n_reviews']
+        df.loc[:, score_cols] = df.loc[:, score_cols].apply(pd.to_numeric)
+        cols_order = (['title', 'year', 'genres'] + score_cols +
+                      ['rt_url', 'magnet_1080p', 'magnet_720p',
+                      'error', 'scrape_date'])
         return df.loc[:, cols_order].sort_values('critics_rating', ascending=False)
 
     @staticmethod

@@ -33,6 +33,7 @@ A tool that:
 
 
 ### Still to do:
+* replace google scraping with `googler -w rottentomatoes -n 10 --json` ([Googler](https://github.com/jarun/googler#installation)
 * add more sophisitcated movie selection logic (perhaps some tiers of relevance).
 * scrape ciritics reviews and calculate directly when there are too few reviews for a "tomatometer".
 

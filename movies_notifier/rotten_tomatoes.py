@@ -16,11 +16,11 @@ class RTScraper:
 
     _audience_api = 'https://www.rottentomatoes.com/napi/audienceScore/'
 
-    def __init__(self, movie_name, year, search_engine='g-cookies'):
+    def __init__(self, movie_name, year, search_engine='g', cookies='none'):
         self.movie_name = movie_name
         self.year = year
         self.search_scraper = movies_notifier.search.Scraper(
-            search_setting=search_engine)
+            search_engine=search_engine, cookies=cookies)
         self.rt_url = None
         self.critics_rating = None
         self.critics_avg_score = None
@@ -41,6 +41,7 @@ class RTScraper:
             self.get_ratings_from_rt_url()
         except Exception as e:
             if raise_error:
+                logger.error(f'Raising and failing because raise_error={raise_error}')
                 raise e
             else:
                 logger.exception(e)
@@ -61,7 +62,7 @@ class RTScraper:
             return 0
         score = sum([w in target or w in self.allowed_missing_words
                   for w in cand_parts])
-        return score / max(len(target.split()), len(cand_parts))
+        return score / len(target.split())
 
     def _match_search_result(self, r_dict):
         score = self._title_similarity_score(

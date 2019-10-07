@@ -20,14 +20,16 @@ def parse_args():
                              "(all possible sorts will be checked). "
                              "other options: 'l' (last added), 't' (trending), 'p' (popularity) "
                              "or any mix of those.")
-    parser.add_argument("-e", "--search-engine", type=str, default="g-cookies",
-                        help="which search engine to use to find the RT page and whether to use browser cookies."
-                             "d: duck-duck-go, g: google. g-cookies: google chrome with your cookies.. ")
+    parser.add_argument("-e", "--search-engine", type=str, default="g",
+                        help="which search engine to use to find the RT page."
+                             "d: duck-duck-go, g: google. ")
+    parser.add_argument("-c", "--cookies-source", type=str, default="firefox",
+                        help="which browser's cookies to use [none, firefox, chrome]")
     parser.add_argument("-o", "--overwrite", action="store_true",
                         help="whether to rescrape and overwrite files with no RT data")
     parser.add_argument("-d", "--delay-range", type=str, default='61-120',
                         help="delay in seconds between scraping requests (default 61-120)")
-    parser.add_argument("-nf", "--number-consequtive-fails", type=int, default=3,
+    parser.add_argument("-nf", "--number-consequtive-fails", type=int, default=5,
                         help="number of consequtive scrape errors after which to stop (default 3)")
     parser.add_argument("--resend-notifications", action="store_true",
                         help="resend notifications for movies that were already in previous notifications")
@@ -46,6 +48,7 @@ def main():
     movies_checker = PopcornWithRT(
         request_delay_range=args.delay_range,
         search_engine=args.search_engine,
+        cookies=args.cookies_source,
         number_fails_threshold=args.number_consequtive_fails)
 
     new_movies = movies_checker.get_new_movies(

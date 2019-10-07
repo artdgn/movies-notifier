@@ -3,7 +3,7 @@ import urllib
 
 import requests
 from parsel import Selector
-from browsercookie import chrome as chrome_cookies
+import browsercookie
 
 from movies_notifier.logger import logger
 
@@ -16,25 +16,27 @@ HEADERS = {
     'accept-language': 'en-GB,en;q=0.9,en-US;q=0.8',
     'dnt': '1',
     'upgrade-insecure-requests': '1',
-    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML,'
-                  ' like Gecko) Chrome/74.0.3729.157 Safari/537.36',
+    'user-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:69.0) Gecko/20100101 Firefox/69.0',
 }
 
 
 class Scraper:
 
-    def __init__(self, search_setting):
-        self.cookiejar = None
-        self._engine = None
-        if 'cookies' in search_setting:
-            self.cookiejar = chrome_cookies()
-
-        if search_setting.startswith('d'):
+    def __init__(self, search_engine, cookies=None):
+        if search_engine.startswith('d'):
             self._engine = DuckDuckGo()
-        elif search_setting.startswith('g'):
+        elif search_engine.startswith('g'):
             self._engine = Google()
         else:
-            raise ValueError(f'Unknown search-engine option: {search_setting}')
+            raise ValueError(f'Unknown search-engine option: {search_engine}')
+
+        if cookies == 'chrome':
+            self.cookiejar = browsercookie.chrome()
+        elif cookies == 'firefox':
+            self.cookiejar = browsercookie.firefox()
+        else:
+            self.cookiejar = None
+            logger.info(f'Not using browser cookies because cookies={cookies}')
 
     def get_results(self, query):
 

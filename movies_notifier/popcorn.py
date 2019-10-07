@@ -25,10 +25,13 @@ class PopcornWithRT:
     def __init__(self,
                  request_delay_range='5-30',
                  number_fails_threshold=3,
-                 search_engine='d'):
+                 search_engine='g',
+                 cookies=None,
+                 ):
         self.request_delay_range = [int(s) for s in request_delay_range.split('-')]
         self.number_fails_threshold = number_fails_threshold
         self.search_engine = search_engine
+        self.cookies = cookies
         self.n_consequtive_fails = 0
 
     @classmethod
@@ -152,7 +155,8 @@ class PopcornWithRT:
             rts = RTScraper(
                 movie_name=m['title'],
                 year=m['year'],
-                search_engine=self.search_engine
+                search_engine=self.search_engine,
+                cookies=self.cookies
             )
             ratings  = rts.get_ratings(
                 raise_error=(self.n_consequtive_fails

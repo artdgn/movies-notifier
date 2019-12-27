@@ -21,4 +21,4 @@ filt = (df_num['critics_rating'] >= 80) & (df_num['audience_rating'] >= 80 ) & (
 df_out = df_num[filt].sort_values(['critics_rating', 'audience_rating'], ascending=False)
 
 filename = 'data/html_table_file.html'
-open(filename, 'wt').write(m_store.movie_df_to_html_table(df_out))
+open(filename, 'wt').write(df_out.to_html(index=None, escape=False, render_links=True))

@@ -1,4 +1,4 @@
-REPO_NAME=movies_notifier
+REPO_NAME=movies-notifier
 VENV_NAME=.venv
 VENV_ACTIVATE=. $(VENV_NAME)/bin/activate
 PYTHON=$(VENV_NAME)/bin/python3

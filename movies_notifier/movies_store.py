@@ -4,9 +4,9 @@ import os
 import pandas as pd
 
 from movies_notifier import pandas_utils
-from movies_notifier.logger import logger
 from movies_notifier.common import \
     CURRENT_DATE, MOVIES_DIR, HTML_DIR, CURRENT_TIMESTAMP
+from movies_notifier.logger import logger
 
 
 class Movie(dict):
@@ -118,7 +118,7 @@ class MoviesStore:
                 except Exception as e:
                     logger.error(f'Failed json read for {filepath}')
 
-    def delete_too_old(self, days_diff = 60):
+    def delete_too_old(self, days_diff=60):
         def too_old(date):
             return (pd.to_datetime(CURRENT_DATE) - pd.to_datetime(date)) > \
                    pd.to_timedelta(f'{days_diff} days')
@@ -145,23 +145,13 @@ class MoviesStore:
         df.loc[:, score_cols] = df.loc[:, score_cols].apply(pd.to_numeric)
         cols_order = (['title', 'year', 'genres'] + score_cols +
                       ['rt_url', 'magnet_1080p', 'magnet_720p',
-                      'error', 'scrape_date'])
+                       'error', 'scrape_date'])
         return df.loc[:, cols_order].sort_values('critics_rating', ascending=False)
-
-    @staticmethod
-    def movie_df_to_html_table(df):
-        linkifier = lambda link_text: lambda l: \
-            f'<a href="{l}" target="_blank">{link_text}</a>'
-        for col in ['rt_url', 'magnet_720p', 'magnet_1080p']:
-            if col in df.columns:
-                df[col] = df[col].apply(linkifier(col))
-
-        pd.set_option('display.max_colwidth', -1)  # to prevent long links from getting truncated
-        return df.to_html(index=None, escape=False)
 
     @classmethod
     def write_html_table_for_list(cls, movies_list):
         filename = os.path.join(HTML_DIR, f'table_{CURRENT_TIMESTAMP}.html')
+        df = cls.movie_list_to_export_df(movies_list)
         with open(filename, 'wt') as f:
-            f.write(cls.movie_df_to_html_table(cls.movie_list_to_export_df(movies_list)))
+            f.write(df.to_html(index=None, escape=False, render_links=True))
         logger.info(f'movies list saved to table at: {filename}')

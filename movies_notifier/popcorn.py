@@ -107,7 +107,7 @@ class PopcornWithRT:
                             stop_on_stale_page=True,
                             save_func=None):
 
-        new_movies = {}  #using dict or deduplication as API sometimes returns duplicates
+        new_movies = {}  # using dict for deduplication as API sometimes returns duplicates
 
         start_page = math.floor(movies_offset_range[0] / self.N_MOVIES_PAGE) + 1
         end_page = math.ceil(movies_offset_range[1] / self.N_MOVIES_PAGE)

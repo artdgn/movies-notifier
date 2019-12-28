@@ -4,6 +4,7 @@ VENV_ACTIVATE=. $(VENV_NAME)/bin/activate
 PYTHON=$(VENV_NAME)/bin/python3
 DOCKER_TAG=artdgn/$(REPO_NAME)
 DOCKER_DATA_ARG=-v $(realpath ./data):/$(REPO_NAME)/data
+DOCKER_GDOCS_ARG=-v $(HOME)/.config/gspread_pandas/:/root/.config/gspread_pandas/
 
 venv:
 	python3.6 -m venv $(VENV_NAME)
@@ -23,8 +24,16 @@ python:
 build-docker: requirements.txt
 	docker build -t $(DOCKER_TAG) .
 
-push-docker: build-docker
-	docker push $(DOCKER_TAG)
-
 docker-bash: build-docker
-	docker run --rm -it $(DOCKER_DATA_ARG) $(DOCKER_TAG) bash
+	docker run --rm -it \
+	$(DOCKER_DATA_ARG) \
+	$(DOCKER_GDOCS_ARG) \
+	--entrypoint=bash \
+	$(DOCKER_TAG)
+
+# run by specifying ARGS: `make ARGS="-n 100 -ne" docker-run`
+docker-run: build-docker
+	docker run --rm -it \
+	$(DOCKER_DATA_ARG) \
+	$(DOCKER_GDOCS_ARG) \
+	$(DOCKER_TAG) $(ARGS)

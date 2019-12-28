@@ -12,8 +12,8 @@ def parse_args():
 
     parser.add_argument("-n", "--n-movies", type=int, default=200,
                         help="number of recent movies to check (default 200)")
-    parser.add_argument("-f", "--first-offset", type=int, default=1,
-                        help="offset from which to start checking (default 1)")
+    parser.add_argument("-f", "--first-offset", type=int, default=0,
+                        help="offset from which to start checking (default 0)")
     parser.add_argument("-s", "--sort", type=str, default="all",
                         help="type of sort for popcorn-api. default 'all' "
                              "(all possible sorts will be checked). "

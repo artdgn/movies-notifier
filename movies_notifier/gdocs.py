@@ -68,7 +68,7 @@ class Gdocs:
             logger.error(f'Sheet creation failed for "{sheet_name}" with "{e}", '
                          f'perhaps already exists, creating "{new_sheet_name}"')
             file.create_sheet(new_sheet_name)
-            logger.info(f'created sheet {sheet_name}')
+            logger.info(f'created sheet {new_sheet_name}')
             return new_sheet_name
 
     @classmethod

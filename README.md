@@ -21,14 +21,14 @@ Currently two types of notifications supported:
 3. Run using `docker run --rm -v ~/your_movies_data:/movies-notifier/data artdgn/movies-notifier`, 
     with no command line options this will just print the help message, 
     or add e.g. `-n 100 -ne` to that line to scan last 100 movies and print the notifications to screen.
-4. Setup a cron job to do that.
+4. Setup a cron job to do that (example in `scripts/example_cron.sh`).
 
 #### Using local installation
 1. Git clone this repo and install requirements in a virtual env(`make install`).
 2. Optional: set up Mailgun account** or Google Sheets API access*** 
 for emailing or just print the notifications with the `-ne` option.
 3. Run: `python check_new_movies.py` or 
-4. Setup a cron job to do that.
+4. Setup a cron job to do that (example in `scripts/example_cron.sh`).
 
 ##### \** Setting up Mailgun: 
 after setting up the account, put the domain, api-key, and recipients in a 

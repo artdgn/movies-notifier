@@ -23,8 +23,8 @@ class PopcornWithRT:
                 }
 
     def __init__(self,
-                 request_delay_range='5-30',
-                 number_fails_threshold=3,
+                 request_delay_range='61-120',
+                 number_fails_threshold=5,
                  search_engine='g',
                  cookies=None,
                  ):

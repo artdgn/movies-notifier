@@ -3,10 +3,9 @@ import os
 
 import pandas as pd
 
-from movies_notifier import pandas_utils
-from movies_notifier.common import \
-    CURRENT_DATE, MOVIES_DIR, HTML_DIR, CURRENT_TIMESTAMP
-from movies_notifier.logger import logger
+from movies_notifier.util import pandas_utils
+from movies_notifier.config import common
+from movies_notifier.util.logger import logger
 
 
 class Movie(dict):
@@ -74,7 +73,7 @@ class MoviesStore:
 
     @staticmethod
     def movie_json_path(m):
-        return Movie(m).json_path(MOVIES_DIR)
+        return Movie(m).json_path(common.MOVIES_DIR)
 
     @classmethod
     def exists(cls, m):
@@ -83,7 +82,7 @@ class MoviesStore:
     @classmethod
     def has_rt_data(cls, m):
         movie = Movie(m)
-        if movie.load_from_disk(MOVIES_DIR):
+        if movie.load_from_disk(common.MOVIES_DIR):
             return (movie.rt_critics_rating() or
                     movie.rt_audience_rating() or
                     movie.rt_critics_avg_score())
@@ -109,9 +108,9 @@ class MoviesStore:
             self.save_movie(m, overwrite=overwrite)
 
     def load_movies(self):
-        files = os.listdir(MOVIES_DIR)
+        files = os.listdir(common.MOVIES_DIR)
         for filename in files:
-            filepath = os.path.join(MOVIES_DIR, filename)
+            filepath = os.path.join(common.MOVIES_DIR, filename)
             with open(filepath, 'rt') as f:
                 try:
                     self.add_movie(json.load(f))
@@ -120,7 +119,7 @@ class MoviesStore:
 
     def delete_too_old(self, days_diff=60):
         def too_old(date):
-            return (pd.to_datetime(CURRENT_DATE) - pd.to_datetime(date)) > \
+            return (pd.to_datetime(common.CURRENT_DATE) - pd.to_datetime(date)) > \
                    pd.to_timedelta(f'{days_diff} days')
 
         for m in self.movies.values():
@@ -150,7 +149,8 @@ class MoviesStore:
 
     @classmethod
     def write_html_table_for_list(cls, movies_list):
-        filename = os.path.join(HTML_DIR, f'table_{CURRENT_TIMESTAMP}.html')
+        filename = os.path.join(common.HTML_DIR,
+                                f'table_{common.CURRENT_TIMESTAMP}.html')
         df = cls.movie_list_to_export_df(movies_list)
         with open(filename, 'wt') as f:
             f.write(df.to_html(index=None, escape=False, render_links=True))

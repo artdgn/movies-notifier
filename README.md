@@ -27,7 +27,7 @@ Currently two types of notifications supported:
 1. Git clone this repo and install requirements in a virtual env(`make install`).
 2. Optional: set up Mailgun account** or Google Sheets API access*** 
 for emailing or just print the notifications with the `-ne` option.
-3. Run: `python check_new_movies.py` or 
+3. Run: `python run_cli.py` or 
 4. Setup a cron job to do that (example in `scripts/example_cron.sh`).
 
 ##### \** Setting up Mailgun: 

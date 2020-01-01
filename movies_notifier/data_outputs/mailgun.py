@@ -3,8 +3,8 @@ import os
 
 import requests
 
-from movies_notifier.common import MAILGUN_DATA_PATH
-from movies_notifier.logger import logger
+from movies_notifier.config.common import MAILGUN_DATA_PATH
+from movies_notifier.util.logger import logger
 
 
 class Mailgun:

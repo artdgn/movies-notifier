@@ -2,10 +2,10 @@ import re
 import urllib
 
 import requests
-from parsel import Selector
+import parsel
 import browsercookie
 
-from movies_notifier.logger import logger
+from movies_notifier.util.logger import logger
 
 
 HEADERS = {
@@ -75,7 +75,7 @@ class Google:
     @staticmethod
     def parse_page(resp):
         results = []
-        sel = Selector(text=resp.text)
+        sel = parsel.Selector(text=resp.text)
         for i in range(1, 11):
             css_text = sel.css(f'.g:nth-child({i}) .r'). \
                 css('a::attr(href)').extract_first()
@@ -109,7 +109,7 @@ class DuckDuckGo:
     @staticmethod
     def parse_page(resp):
         results = []
-        sel = Selector(text=resp.text)
+        sel = parsel.Selector(text=resp.text)
         for i in range(1, 11):
             link_sel = sel.css(f'.web-result:nth-child({i}) .result__a')
 

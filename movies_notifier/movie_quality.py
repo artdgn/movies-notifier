@@ -1,6 +1,6 @@
 import typing
-from movies_notifier.logger import logger
-from movies_notifier.movies_store import Movie
+from movies_notifier.util.logger import logger
+from movies_notifier.persistance.movies import Movie
 
 
 def select_good_movies(movies: typing.List[Movie],

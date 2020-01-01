@@ -4,11 +4,11 @@ import requests
 
 from parsel import Selector
 
-import movies_notifier.search
-from movies_notifier.logger import logger
+from movies_notifier.data_inputs import search
+from movies_notifier.util.logger import logger
 
 
-class RTScraper:
+class MovieRatingsScraper:
 
     allowed_missing_words = ['the']
 
@@ -19,7 +19,7 @@ class RTScraper:
     def __init__(self, movie_name, year, search_engine='g', cookies='none'):
         self.movie_name = movie_name
         self.year = year
-        self.search_scraper = movies_notifier.search.Scraper(
+        self.search_scraper = search.Scraper(
             search_engine=search_engine, cookies=cookies)
         self.rt_url = None
         self.critics_rating = None
@@ -129,7 +129,7 @@ class RTScraper:
             si_str = 'root.RottenTomatoes.context.scoreInfo'
             return json.loads(re.findall(f'{si_str} = (.*);', resp.text)[0])
         except (json.decoder.JSONDecodeError, TypeError, IndexError):
-            logger.error('failed getting structured critics score data')
+            logger.error('failed getting structured critics score data_inputs')
             return {}
 
     def _get_full_audience_data(self, resp):

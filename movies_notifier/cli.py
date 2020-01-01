@@ -1,10 +1,10 @@
 import functools
 from argparse import ArgumentParser
 
-from movies_notifier.movie_quality import select_good_movies
-from movies_notifier.movies_store import MoviesStore
-from movies_notifier.notification import Notifier
-from movies_notifier.popcorn import PopcornWithRT
+from movies_notifier import movie_quality
+from movies_notifier.persistance.movies import MoviesStore
+from movies_notifier.persistance.notifications import Notifier
+from movies_notifier.data_inputs.popcorn import PopcornWithRT
 
 
 def parse_args():
@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument("-cs", "--continue-on-stale", action="store_true",
                         help="continue scanning popcorn results if one full page is stale")
     parser.add_argument("-o", "--overwrite", action="store_true",
-                        help="whether to rescrape and overwrite files with no RT data")
+                        help="whether to rescrape and overwrite files with no RT data_inputs")
 
     parser.add_argument("-e", "--search-engine", type=str, default="g",
                         help="which search engine to use to find the RT page."
@@ -64,7 +64,7 @@ def main():
     )
 
     # select good movies
-    good_movies = select_good_movies(m_store.movies.values())
+    good_movies = movie_quality.select_good_movies(m_store.movies.values())
 
     # notify
     notified_movies = \
@@ -75,7 +75,3 @@ def main():
     # html table
     if notified_movies:
         m_store.write_html_table_for_list(notified_movies)
-
-
-if __name__ == '__main__':
-    main()

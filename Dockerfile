@@ -11,6 +11,6 @@ ADD . ${APP_DIR}
 
 WORKDIR ${APP_DIR}
 
-ENTRYPOINT ["python", "check_new_movies.py"]
+ENTRYPOINT ["python", "run_cli.py"]
 
 CMD ["--help"]

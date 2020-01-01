@@ -2,7 +2,7 @@ import random
 
 import gspread_pandas
 
-from movies_notifier.logger import logger
+from movies_notifier.util.logger import logger
 
 
 class Gdocs:

@@ -1,11 +1,11 @@
 import json
 import os
 
-from movies_notifier.common import CURRENT_DATE, SENT_DIR
-from movies_notifier.gdocs import Gdocs
-from movies_notifier.logger import logger
-from movies_notifier.mailgun import Mailgun
-from movies_notifier.movies_store import Movie, MoviesStore
+from movies_notifier.config.common import CURRENT_DATE, SENT_DIR
+from movies_notifier.data_outputs.gdocs import Gdocs
+from movies_notifier.util.logger import logger
+from movies_notifier.data_outputs.mailgun import Mailgun
+from movies_notifier.persistance.movies import Movie, MoviesStore
 
 
 class Notifier:

@@ -4,9 +4,9 @@ import random
 import requests
 import time
 
-from movies_notifier.common import CURRENT_DATE
-from movies_notifier.logger import logger
-from movies_notifier.rotten_tomatoes import RTScraper
+from movies_notifier.config.common import CURRENT_DATE
+from movies_notifier.util.logger import logger
+from movies_notifier.data_inputs import rotten_tomatoes
 
 
 class PopcornWithRT:
@@ -152,7 +152,7 @@ class PopcornWithRT:
 
     def add_rt_fields(self, m, overwrite=True):
         if overwrite or 'rotten_tomatoes' not in m:
-            rts = RTScraper(
+            rts = rotten_tomatoes.MovieRatingsScraper(
                 movie_name=m['title'],
                 year=m['year'],
                 search_engine=self.search_engine,

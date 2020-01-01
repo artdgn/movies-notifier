@@ -1,7 +1,7 @@
 import pandas as pd
 
-from movies_notifier import pandas_utils
-from movies_notifier.movies_store import MoviesStore
+from movies_notifier.util import pandas_utils
+from movies_notifier.persistance.movies import MoviesStore
 
 pandas_utils.console_settings()
 
@@ -20,5 +20,5 @@ df_num.drop(['magnet_720p', 'error', 'scrape_date'], axis=1, inplace=True)
 filt = (df_num['critics_rating'] >= 80) & (df_num['audience_rating'] >= 80 ) & (df_num['year'] >= 2017 )
 df_out = df_num[filt].sort_values(['critics_rating', 'audience_rating'], ascending=False)
 
-filename = 'data/html_table_file.html'
+filename = 'data_inputs/html_table_file.html'
 open(filename, 'wt').write(df_out.to_html(index=None, escape=False, render_links=True))

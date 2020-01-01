@@ -14,14 +14,14 @@ requirements.txt: venv
 	pip install -U pip pip-tools; \
 	pip-compile requirements.in
 
-install: requirements.txt venv
+install: venv
 	$(VENV_ACTIVATE); \
 	pip install -r requirements.txt
 
 python:
 	@echo $(PYTHON)
 
-build-docker: requirements.txt
+build-docker:
 	docker build -t $(DOCKER_TAG) .
 
 docker-bash: build-docker

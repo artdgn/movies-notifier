@@ -1,7 +1,7 @@
 import sys
 import logging
 
-from movies_notifier.common import LOG_FILEPATH
+from movies_notifier.config.common import LOG_FILEPATH
 
 logFormatter = logging.Formatter("[%(asctime)s %(levelname)s] %(message)s", datefmt='%H:%M:%S')
 logger = logging.getLogger()

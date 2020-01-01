@@ -1,9 +1,7 @@
-import json
-
 import pandas as pd
 
-from movies_notifier import pandas_utils
-from movies_notifier.movies_store import MoviesStore
+from movies_notifier.util import pandas_utils
+from movies_notifier.persistance.movies import MoviesStore
 
 pandas_utils.console_settings()
 

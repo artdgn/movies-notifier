@@ -9,6 +9,7 @@ DOCKER_GDOCS_ARG=-v $(HOME)/.config/gspread_pandas/:/root/.config/gspread_pandas
 venv:
 	python3.6 -m venv $(VENV_NAME)
 
+.PHONY: requirements.txt
 requirements.txt: venv
 	$(VENV_ACTIVATE); \
 	pip install -U pip pip-tools; \

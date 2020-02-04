@@ -141,11 +141,13 @@ class MoviesStore:
         df = df.iloc[:, ~df.columns.duplicated()]  # json split creates duplicate title
         score_cols = ['critics_rating', 'critics_avg_score', 'critics_n_reviews',
                       'audience_rating', 'audience_avg_score', 'audience_n_reviews']
+        score_cols = [c for c in score_cols if c in df.columns]
         df.loc[:, score_cols] = df.loc[:, score_cols].apply(pd.to_numeric)
         cols_order = (['title', 'year', 'genres'] + score_cols +
                       ['rt_url', 'magnet_1080p', 'magnet_720p',
                        'error', 'scrape_date'])
-        return df.loc[:, cols_order].sort_values('critics_rating', ascending=False)
+        cols_order = [c for c in cols_order if c in df.columns]
+        return df[cols_order].sort_values('critics_rating', ascending=False)
 
     @classmethod
     def write_html_table_for_list(cls, movies_list):

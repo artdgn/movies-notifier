@@ -10,7 +10,7 @@ from movies_notifier.util.logger import logger
 
 class MovieRatingsScraper:
 
-    allowed_missing_words = ['the']
+    allowed_missing_words = ['the', 'and']
 
     _movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'  # no slashes after /m/
 

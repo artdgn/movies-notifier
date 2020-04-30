@@ -11,8 +11,7 @@ from movies_notifier.data_inputs import rotten_tomatoes
 
 class PopcornWithRT:
 
-    # POPCORN_API_URI = "https://tv-v2.api-fetch.website"
-    POPCORN_API_URI = "https://popcorn-api.io"
+    POPCORN_API_URI = "https://movies-v2.api-fetch.sh"
 
     N_MOVIES_PAGE = 50
 

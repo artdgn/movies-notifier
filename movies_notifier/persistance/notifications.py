@@ -3,9 +3,9 @@ import os
 
 from movies_notifier.config.common import CURRENT_DATE, SENT_DIR
 from movies_notifier.data_outputs.gdocs import Gdocs
-from movies_notifier.util.logger import logger
 from movies_notifier.data_outputs.mailgun import Mailgun
 from movies_notifier.persistance.movies import Movie, MoviesStore
+from movies_notifier.util.logger import logger
 
 
 class Notifier:
@@ -35,11 +35,7 @@ class Notifier:
             success = success or sent
 
         if self.gdocs_share_email:
-            df = MoviesStore().movie_list_to_export_df(to_send)
-            df = df.set_index(df.columns[0]).T
-            uploaded = Gdocs().upload_and_share(df=df,
-                                               email=self.gdocs_share_email,
-                                               sheet_name=CURRENT_DATE)
+            uploaded = self.upload_to_gdocs(to_send)
             success = success or uploaded
 
         if success:
@@ -48,6 +44,14 @@ class Notifier:
             self.log_notifications(subject=subject, text=text)
 
         return to_send
+
+    def upload_to_gdocs(self, movies):
+        df = MoviesStore().movie_list_to_export_df(movies)
+        df = df.set_index(df.columns[0]).T
+        df['label'] = ''  # add label col for relevance labeling
+        return Gdocs().upload_and_share(df=df,
+                                        email=self.gdocs_share_email,
+                                        sheet_name=CURRENT_DATE)
 
     @staticmethod
     def log_notifications(subject, text):

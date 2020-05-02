@@ -3,8 +3,8 @@ import os
 
 import pandas as pd
 
-from movies_notifier.util import pandas_utils
 from movies_notifier.config import common
+from movies_notifier.util import pandas_utils
 from movies_notifier.util.logger import logger
 
 
@@ -24,10 +24,25 @@ class Movie(dict):
     def rt_data(self):
         return self.get('rotten_tomatoes')
 
-    def rt_critics_rating(self, min_n_reviews=0):
+    @staticmethod
+    def adjust_score(score, n_reviews, precision=1):
+        # rule of succession for binary (success / failure)
+        raw = float(score)
+        n = float(n_reviews)
+        adjusted = 100 * ((raw * n / 100) + 1) / (n + 2)
+        return round(adjusted, precision)
+
+    def rt_critics_rating(self, min_n_reviews=0, adjust_by_n_reviews=True):
         if (not self.rt_critics_n_reviews() or
                 self.rt_critics_n_reviews() >= min_n_reviews):
-            return self.get('rotten_tomatoes', {}).get('critics_rating')
+            if not adjust_by_n_reviews or not self.rt_critics_n_reviews():
+                return self.rt_critics_rating_raw()
+            else:
+                return self.adjust_score(self.rt_critics_rating_raw(),
+                                         self.rt_critics_n_reviews())
+
+    def rt_critics_rating_raw(self):
+        return self.get('rotten_tomatoes', {}).get('critics_rating')
 
     def rt_critics_avg_score(self):
         return self.get('rotten_tomatoes', {}).get('critics_avg_score')
@@ -35,10 +50,17 @@ class Movie(dict):
     def rt_critics_n_reviews(self):
         return self.get('rotten_tomatoes', {}).get('critics_n_reviews')
 
-    def rt_audience_rating(self, min_n_reviews=0):
+    def rt_audience_rating(self, min_n_reviews=0, adjust_by_n_reviews=True):
         if (not self.rt_audience_n_reviews() or
                 self.rt_audience_n_reviews() >= min_n_reviews):
-            return self.get('rotten_tomatoes', {}).get('audience_rating')
+            if not adjust_by_n_reviews or not self.rt_audience_n_reviews():
+                return self.rt_audience_rating_raw()
+            else:
+                return self.adjust_score(self.rt_audience_rating_raw(),
+                                         self.rt_audience_n_reviews())
+
+    def rt_audience_rating_raw(self):
+        return self.get('rotten_tomatoes', {}).get('audience_rating')
 
     def rt_audience_avg_score(self):
         return self.get('rotten_tomatoes', {}).get('audience_avg_score')
@@ -51,9 +73,6 @@ class Movie(dict):
 
     def title(self):
         return self['title']
-
-    def to_dict(self):
-        return dict(self)
 
     def minimal_fields(self, keep_keys=None):
         if keep_keys is None:
@@ -117,37 +136,45 @@ class MoviesStore:
                 except Exception as e:
                     logger.error(f'Failed json read for {filepath}')
 
-    def delete_too_old(self, days_diff=60):
-        def too_old(date):
-            return (pd.to_datetime(common.CURRENT_DATE) - pd.to_datetime(date)) > \
-                   pd.to_timedelta(f'{days_diff} days')
-
-        for m in self.movies.values():
-            if too_old(m['scrape_date']):
-                os.remove(self.movie_json_path(m))
-                logger.info(f"Removing {m.id()} because "
-                            f"{m['scrape_date']} is more than {days_diff} old")
-
     def movies_df(self):
         if not self.movies:
             self.load_movies()
         return self.movie_list_to_export_df(list(self.movies.values()))
 
     @staticmethod
-    def movie_list_to_export_df(movie_list):
+    def movie_list_to_export_df(movie_list, adjust_scores=True):
         df = pd.DataFrame(movie_list)
+
+        # expand rt data
         df['rotten_tomatoes'] = df['rotten_tomatoes'].apply(json.dumps)
         df = pandas_utils.split_json_field(df, 'rotten_tomatoes')
         df = df.iloc[:, ~df.columns.duplicated()]  # json split creates duplicate title
+
+        # process numeric
         score_cols = ['critics_rating', 'critics_avg_score', 'critics_n_reviews',
                       'audience_rating', 'audience_avg_score', 'audience_n_reviews']
         score_cols = [c for c in score_cols if c in df.columns]
         df.loc[:, score_cols] = df.loc[:, score_cols].apply(pd.to_numeric)
+
+        if adjust_scores:
+            df['critics_rating'] = df.apply(
+                lambda r: Movie.adjust_score(r['critics_rating'],
+                                             r['critics_n_reviews'] or 1000  # no adjustment if missing
+                                             ), axis=1)
+            df['audience_rating'] = df.apply(
+                lambda r: Movie.adjust_score(r['audience_rating'],
+                                             r['audience_n_reviews'] or 1000  # no adjustment if missing
+                                             ), axis=1)
+
+        df['mean_score'] = (df['audience_rating'] + df['critics_rating']) / 2
+        df_sort = df.sort_values('mean_score', ascending=False)
+
+        # sort columns and rows
         cols_order = (['title', 'year', 'genres'] + score_cols +
                       ['rt_url', 'magnet_1080p', 'magnet_720p',
                        'error', 'scrape_date'])
         cols_order = [c for c in cols_order if c in df.columns]
-        return df[cols_order].sort_values('critics_rating', ascending=False)
+        return df_sort[cols_order]
 
     @classmethod
     def write_html_table_for_list(cls, movies_list):

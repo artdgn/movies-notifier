@@ -39,7 +39,9 @@ Refer to the setup in
 [gspread-pandas](https://github.com/aiguofer/gspread-pandas) or [gspread](https://github.com/burnash/gspread)
 and than run with `-gs your-email@gmail.com` to recieve a share notification with the resulting doc.
 
-### Still to do:
+### To do:
+* "Directed by" field
+* better ranking using past labels from the notification google-sheet
 * replace google scraping with `googler -w rottentomatoes -n 10 --json` ([Googler](https://github.com/jarun/googler#installation)
 * add more sophisitcated movie selection logic (perhaps some tiers of relevance).
 

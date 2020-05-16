@@ -16,8 +16,7 @@ class Mailgun:
         except Exception as e:
             logger.error(f"Mailgun data doesn't exist or is "
                          f"not a valid json at: {MAILGUN_DATA_PATH}. "
-                         f"Either use '-ne' / '--no-email' option to not send emails"
-                         f"or provide a json file with following fields: "
+                         f"Provide a json file with following fields: "
                          f"MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_RECIPIENTS.")
             return {}
 

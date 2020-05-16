@@ -26,11 +26,14 @@ class Movie(dict):
 
     @staticmethod
     def adjust_score(score, n_reviews, precision=1):
-        # rule of succession for binary (success / failure)
-        raw = float(score)
-        n = float(n_reviews)
-        adjusted = 100 * ((raw * n / 100) + 1) / (n + 2)
-        return round(adjusted, precision)
+        try:
+            # rule of succession for binary (success / failure)
+            raw = float(score)
+            n = float(n_reviews)
+            adjusted = 100 * ((raw * n / 100) + 1) / (n + 2)
+            return round(adjusted, precision)
+        except ValueError:
+            return score
 
     def rt_critics_rating(self, min_n_reviews=0, adjust_by_n_reviews=True):
         if (not self.rt_critics_n_reviews() or

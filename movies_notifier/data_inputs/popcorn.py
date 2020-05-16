@@ -98,7 +98,7 @@ class PopcornWithRT:
                 skip_func=skip_func,
                 stop_on_stale_page=stop_on_stale_page,
                 save_func=save_func))
-        return list(new_movies.values())
+        logger.info(f'Got {len(new_movies)} new movies from popcorn API')
 
     def _new_movies_for_sort(self,
                             movies_offset_range = (1, 100),
@@ -146,7 +146,7 @@ class PopcornWithRT:
 
             self.request_delay()
 
-        logger.info(f'Got {len(new_movies)} new movies from popcorn API')
+        logger.info(f'Got {len(new_movies)} new movies from popcorn API for sort={sort}')
 
         return new_movies
 

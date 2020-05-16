@@ -47,9 +47,11 @@ class Notifier:
 
     def upload_to_gdocs(self, movies):
         df = MoviesStore().movie_list_to_export_df(movies)
-        df = df.set_index(df.columns[0]).T
+        df.set_index(df.columns[0])
         df['label'] = ''  # add label col for relevance labeling
-        return Gdocs().upload_and_share(df=df,
+        df = df[df.columns[[-1]].append(df.columns[0:-1])]
+        upload_df = df.T
+        return Gdocs().upload_and_share(df=upload_df,
                                         email=self.gdocs_share_email,
                                         sheet_name=CURRENT_DATE)
 

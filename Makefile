@@ -7,7 +7,7 @@ DOCKER_DATA_ARG=-v $(realpath ./data):/$(REPO_NAME)/data
 DOCKER_GDOCS_ARG=-v $(HOME)/.config/gspread_pandas/:/root/.config/gspread_pandas/
 
 venv:
-	python3.6 -m venv $(VENV_NAME)
+	python3 -m venv $(VENV_NAME)
 
 .PHONY: requirements.txt
 requirements.txt: venv

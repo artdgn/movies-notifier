@@ -129,7 +129,7 @@ class MovieRatingsScraper:
             si_str = 'root.RottenTomatoes.context.scoreInfo'
             return json.loads(re.findall(f'{si_str} = (.*);', resp.text)[0])
         except (json.decoder.JSONDecodeError, TypeError, IndexError):
-            logger.error('failed getting structured critics score data_inputs')
+            logger.error('failed getting structured critics score data')
             return {}
 
     def _get_full_audience_data(self, resp):

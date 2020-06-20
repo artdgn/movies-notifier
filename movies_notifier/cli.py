@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument("-ss", "--stop-on-stale", action="store_true",
                         help="stop scanning popcorn results if one full page is stale")
     parser.add_argument("-o", "--overwrite", action="store_true",
-                        help="whether to rescrape and overwrite files with no RT data_inputs")
+                        help="whether to rescrape and overwrite files with no RT data")
 
     parser.add_argument("-se", "--search-engine", type=str, default="g",
                         help="which search engine to use to find the RT page."

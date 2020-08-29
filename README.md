@@ -12,6 +12,10 @@ Currently two types of notifications supported:
 
 \* good - currently defined as having critics and audience ratings average higher than 80%.
 
+Google Sheets auto-sharing:
+
+![](https://artdgn.github.io/images/movies-notifier.png)
+
 
 ## Usage:
 

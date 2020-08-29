@@ -1,7 +1,5 @@
-setuptools
 pandas
 requests
 parsel
 browsercookie
 gspread_pandas
-jinja2

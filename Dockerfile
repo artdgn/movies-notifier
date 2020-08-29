@@ -1,4 +1,6 @@
-FROM python:3.6
+FROM python:3.6-slim
+
+RUN apt-get update && apt-get -y install build-essential && apt-get clean
 
 COPY requirements.txt .
 

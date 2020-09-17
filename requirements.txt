@@ -14,18 +14,18 @@ cssselect==1.1.0          # via parsel
 decorator==4.4.2          # via gspread-pandas
 future==0.18.2            # via gspread-pandas
 google-auth-oauthlib==0.4.1  # via gspread, gspread-pandas
-google-auth==1.21.0       # via google-auth-oauthlib, gspread, gspread-pandas
+google-auth==1.21.2       # via google-auth-oauthlib, gspread, gspread-pandas
 gspread-pandas==2.2.3     # via -r requirements.in
 gspread==3.6.0            # via gspread-pandas
 idna==2.10                # via requests
 importlib-metadata==1.7.0  # via keyring
 jeepney==0.4.3            # via keyring, secretstorage
-keyring==21.3.1           # via browsercookie
+keyring==21.4.0           # via browsercookie
 lxml==4.5.2               # via parsel
 lz4==3.1.0                # via browsercookie
-numpy==1.19.1             # via pandas
+numpy==1.19.2             # via pandas
 oauthlib==3.1.0           # via requests-oauthlib
-pandas==1.1.1             # via -r requirements.in, gspread-pandas
+pandas==1.0.5             # via -r requirements.in, gspread-pandas
 parsel==1.6.0             # via -r requirements.in
 pyasn1-modules==0.2.8     # via google-auth
 pyasn1==0.4.8             # via pyasn1-modules, rsa

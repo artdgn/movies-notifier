@@ -1,4 +1,5 @@
 import json
+import math
 import os
 
 import pandas as pd
@@ -30,6 +31,8 @@ class Movie(dict):
             # rule of succession for binary (success / failure)
             raw = float(score)
             n = float(n_reviews)
+            if math.isnan(n):
+                return raw
             adjusted = 100 * ((raw * n / 100) + 1) / (n + 2)
             return round(adjusted, precision)
         except ValueError:
@@ -161,13 +164,11 @@ class MoviesStore:
 
         if adjust_scores:
             df['critics_rating'] = df.apply(
-                lambda r: Movie.adjust_score(r['critics_rating'],
-                                             r['critics_n_reviews'] or 1000  # no adjustment if missing
-                                             ), axis=1)
+                lambda r: Movie.adjust_score(
+                    r['critics_rating'], r['critics_n_reviews']), axis=1)
             df['audience_rating'] = df.apply(
-                lambda r: Movie.adjust_score(r['audience_rating'],
-                                             r['audience_n_reviews'] or 1000  # no adjustment if missing
-                                             ), axis=1)
+                lambda r: Movie.adjust_score(
+                    r['audience_rating'], r['audience_n_reviews']), axis=1)
 
         df['mean_score'] = (df['audience_rating'] + df['critics_rating']) / 2
         df_sort = df.sort_values('mean_score', ascending=False)

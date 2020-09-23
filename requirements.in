@@ -1,5 +1,4 @@
 pandas==1.0.5
 requests
 parsel
-browsercookie
 gspread_pandas

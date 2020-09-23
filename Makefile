@@ -40,6 +40,9 @@ docker-run: docker-build
 	$(DOCKER_GDOCS_ARG) \
 	$(DOCKER_TAG) $(ARGS)
 
+chown-data-dir:
+	sudo chown $(shell id -u):$(shell id -u) -R data
+
 tests:
 	$(VENV_ACTIVATE); \
 	pytest

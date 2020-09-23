@@ -3,7 +3,7 @@
 ### A simple notifier of new good downloadable movies.
 
 1. Checks what new movies are available for download (from Popcorn-API)
-2. Checks their ratings on Rotten Tomatoes (gets there by scraping search results).
+2. Checks their ratings on Rotten Tomatoes.
 3. Sends a notification if there are any good* movies with their details. 
 Currently two types of notifications supported:
     - Upload and share via Google Sheets (requires Google Sheets API setup).

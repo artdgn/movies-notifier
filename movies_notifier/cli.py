@@ -25,17 +25,12 @@ def parse_args():
                              "(all possible sorts will be checked). "
                              "other options: 'l' (last added), 't' (trending), 'p' (popularity) "
                              "or any mix of those.")
+
     parser.add_argument("-ss", "--stop-on-stale", action="store_true",
                         help="stop scanning popcorn results if one full page is stale")
+
     parser.add_argument("-o", "--overwrite", action="store_true",
                         help="whether to rescrape and overwrite files with no RT data")
-
-    parser.add_argument("-se", "--search-engine", type=str, default="g",
-                        help="which search engine to use to find the RT page."
-                             "d: duck-duck-go, g: google. ")
-
-    parser.add_argument("-c", "--cookies-source", type=str, default="none",
-                        help="which browser's cookies to use [none, firefox, chrome]")
 
     parser.add_argument("-e", "--email", action="store_true",
                         help="notify by email (use if you have email notifier set up)")
@@ -52,9 +47,7 @@ def main():
 
     m_store = MoviesStore()
 
-    movies_checker = PopcornWithRT(
-        search_engine=args.search_engine,
-        cookies=args.cookies_source)
+    movies_checker = PopcornWithRT()
 
     movies_checker.get_new_movies(
         movies_offset_range=(args.first_offset,

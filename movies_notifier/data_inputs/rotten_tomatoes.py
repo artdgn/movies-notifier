@@ -97,9 +97,9 @@ class MovieRatingsScraper:
         self.critics_rating = self.critics_data.get(
             'tomatometerAllCritics', {}).get('score', '')
         self.critics_avg_score = self.critics_data.get(
-            'tomatometerAllCritics', {}).get('avgScore', '')
+            'tomatometerAllCritics', {}).get('averageRating', '')
         self.critics_n_reviews = self.critics_data.get(
-            'tomatometerAllCritics', {}).get('numberOfReviews', '')
+            'tomatometerAllCritics', {}).get('ratingCount', '')
 
         if not self.critics_rating:  # try css
             self.critics_rating = sel.css(
@@ -112,13 +112,10 @@ class MovieRatingsScraper:
         self.audience_avg_score = self.audience_data.get(
             'audienceScoreAll', {}).get('averageRating', '')
         self.audience_n_reviews = self.audience_data.get(
-            'audienceScoreAll', {}).get('reviewCount', '')
+            'audienceScoreAll', {}).get('ratingCount', '')
 
-        self.title = self.critics_data.get(
-            'tomatometerAllCritics', {}).get('title', '')
-        if not self.title:  # try css
-            self.title = sel.css('.mop-ratings-wrap__title--top::text').extract_first() or ''
-            self.title = self.title.strip()
+        self.title = sel.css('.mop-ratings-wrap__title--top::text').extract_first() or ''
+        self.title = self.title.strip()
 
         # synopsis
         self.synopsis = sel.css('#movieSynopsis::text').extract_first() or ''

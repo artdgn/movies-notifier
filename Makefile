@@ -17,6 +17,7 @@ requirements: .venv
 
 install: .venv
 	$(VENV_ACTIVATE); \
+	pip install pytest; \
 	pip install -r requirements.txt
 
 python:
@@ -38,3 +39,7 @@ docker-run: docker-build
 	$(DOCKER_DATA_ARG) \
 	$(DOCKER_GDOCS_ARG) \
 	$(DOCKER_TAG) $(ARGS)
+
+tests:
+	$(VENV_ACTIVATE); \
+	pytest

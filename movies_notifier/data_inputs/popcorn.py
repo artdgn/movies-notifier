@@ -159,8 +159,7 @@ class PopcornWithRT:
                 cookies=self.cookies
             )
             ratings  = rts.get_ratings(
-                raise_error=(self.n_consequtive_fails
-                             >= self.number_fails_threshold))
+                raise_error=(self.n_consequtive_fails >= self.number_fails_threshold))
 
             if not ratings or ratings.get('error'):
                 self.n_consequtive_fails += 1

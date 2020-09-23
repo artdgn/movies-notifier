@@ -18,5 +18,13 @@ class TestRT:
         assert sut.audience_rating
         assert sut.audience_avg_score
         assert sut.audience_n_reviews
-        assert sut.title
+        assert sut.rt_title
         assert sut.synopsis
+
+    def test_get_basic_data_from_search_simple(self):
+        name = 'Thank You for Smoking'
+        sut = self.rt_cls(name, 2006)
+        sut.get_basic_data_from_search()
+        assert sut.rt_url == 'https://www.rottentomatoes.com/m/thank_you_for_smoking'
+        assert sut.rt_title == name
+        assert sut.critics_rating

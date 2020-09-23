@@ -153,10 +153,7 @@ class PopcornWithRT:
     def add_rt_fields(self, m, overwrite=True):
         if overwrite or 'rotten_tomatoes' not in m:
             rts = rotten_tomatoes.MovieRatingsScraper(
-                movie_name=m['title'],
-                year=m['year'],
-                search_engine=self.search_engine,
-                cookies=self.cookies
+                movie_name=m['title'], year=m['year']
             )
             ratings  = rts.get_ratings(
                 raise_error=(self.n_consequtive_fails >= self.number_fails_threshold))

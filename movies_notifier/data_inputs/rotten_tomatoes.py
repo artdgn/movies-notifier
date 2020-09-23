@@ -4,23 +4,20 @@ import requests
 
 from parsel import Selector
 
-from movies_notifier.data_inputs import search
 from movies_notifier.util.logger import logger
 
 
 class MovieRatingsScraper:
 
-    allowed_missing_words = ['the', 'and']
+    _base_url = 'https://www.rottentomatoes.com'
 
-    _movie_page_url_patten = r'.*rottentomatoes.com/m/[^\/]*$'  # no slashes after /m/
+    _search_api = _base_url + '/api/private/v2.0/search'
 
-    _audience_api = 'https://www.rottentomatoes.com/napi/audienceScore/'
+    _audience_api = _base_url + '/napi/audienceScore/'
 
-    def __init__(self, movie_name, year, search_engine='g', cookies='none'):
+    def __init__(self, movie_name, year):
         self.movie_name = movie_name
         self.year = year
-        self.search_scraper = search.Scraper(
-            search_engine=search_engine, cookies=cookies)
         self.rt_url = None
         self.critics_rating = None
         self.critics_avg_score = None
@@ -28,16 +25,14 @@ class MovieRatingsScraper:
         self.audience_rating = None
         self.audience_avg_score = None
         self.audience_n_reviews = None
-        self.title = None
+        self.rt_title = None
         self.synopsis = None
         self.error = None
 
-    def _search_query(self):
-        return f'{self.movie_name} {self.year} site:www.rottentomatoes.com'
 
-    def get_ratings(self, check_title=True, raise_error=True):
+    def get_ratings(self, raise_error=True):
         try:
-            self.get_rt_url_from_search()
+            self.get_basic_data_from_search()
             self.get_ratings_from_rt_url()
         except Exception as e:
             if raise_error:
@@ -46,45 +41,31 @@ class MovieRatingsScraper:
             else:
                 logger.exception(e)
                 self.error = str(e)
-        return self.format_results(check_title=check_title)
+        return self.format_results()
 
-    @staticmethod
-    def normalise_title(s):
-        return ' '.join(re.sub(r'[^\w\s]', '', str(s)).lower().split())
+    def get_basic_data_from_search(self):
+        resp = requests.get(self._search_api,
+                            params={'q': self.movie_name})
+        data = resp.json()
+        movies_data = data.get('movies')
+        if not movies_data:
+            raise RuntimeError(f'RT search returned no movies for {self.movie_name}')
 
-    def _url_check(self, url):
-        return re.fullmatch(self._movie_page_url_patten, url) is not None
+        movie_data = self._select_movie_search_result(movies_data)
 
-    def _title_similarity_score(self, candidate, target):
-        cand_parts = self.normalise_title(candidate).split()
-        target = self.normalise_title(target)
-        if not cand_parts or not target:
-            return 0
-        score = sum([w in target or w in self.allowed_missing_words
-                  for w in cand_parts])
-        return score / len(target.split())
+        # get the data
+        self.rt_title = movie_data['name']
+        self.rt_url = f"{self._base_url}{movie_data['url']}"
+        self.critics_rating = movie_data.get('meterScore', '')
 
-    def _match_search_result(self, r_dict):
-        score = self._title_similarity_score(
-            candidate=r_dict['title'], target=self.movie_name)
-        if not self._url_check(r_dict['link']):
-            score *= 0.75
-        return score
-
-    def get_rt_url_from_search(self):
-
-        first_page_results = self.search_scraper.get_results(self._search_query())
-
-        best_match = max(first_page_results, key=self._match_search_result)
-        rt_url = best_match['link']
-
-        if self._match_search_result(best_match) is 0:
-            logger.warn(f"Couldn't find exact match in first page of "
-                        f"search results for {self.movie_name}, "
-                        f"trying first result as fallback")
-            rt_url = first_page_results[0]['link']
-
-        self.rt_url = rt_url
+    def _select_movie_search_result(self, movies):
+        for movie in movies:
+            year_gap = abs(int(movie['year']) - int(self.year))
+            if year_gap <= 1:
+                return movie
+        else:
+            raise RuntimeError(f'no movie found in results ({len(movies)}) '
+                               f'within 1 year from {self.year}')
 
     def get_ratings_from_rt_url(self):
         resp = requests.get(self.rt_url)
@@ -95,7 +76,7 @@ class MovieRatingsScraper:
 
         self.critics_data = self._get_full_critics_data(resp)
         self.critics_rating = self.critics_data.get(
-            'tomatometerAllCritics', {}).get('score', '')
+            'tomatometerAllCritics', {}).get('score', self.critics_rating or '')
         self.critics_avg_score = self.critics_data.get(
             'tomatometerAllCritics', {}).get('averageRating', '')
         self.critics_n_reviews = self.critics_data.get(
@@ -114,8 +95,9 @@ class MovieRatingsScraper:
         self.audience_n_reviews = self.audience_data.get(
             'audienceScoreAll', {}).get('ratingCount', '')
 
-        self.title = sel.css('.mop-ratings-wrap__title--top::text').extract_first() or ''
-        self.title = self.title.strip()
+        self.rt_title = (self.rt_title or
+                         sel.css('.mop-ratings-wrap__title--top::text').extract_first())
+        self.rt_title = self.rt_title.strip()
 
         # synopsis
         self.synopsis = sel.css('#movieSynopsis::text').extract_first() or ''
@@ -141,7 +123,7 @@ class MovieRatingsScraper:
         except (IndexError, AttributeError, TypeError):
             return {}
 
-    def format_results(self, check_title=True):
+    def format_results(self):
         res = {
             'rt_url': self.rt_url,
             'critics_rating': self.critics_rating,
@@ -150,24 +132,11 @@ class MovieRatingsScraper:
             'audience_rating': self.audience_rating,
             'audience_avg_score': self.audience_avg_score,
             'audience_n_reviews': self.audience_n_reviews,
-            'title': self.title,
+            'title': self.rt_title,
         }
 
         if self.error:
             res['error'] = self.error
 
-        if not self.error and check_title and \
-                self._title_similarity_score(candidate=self.title, target=self.movie_name) <= 0.8:
-            res['critics_rating'] = None
-            res['critics_avg_score'] = None
-            res['critics_n_reviews'] = None
-            res['audience_rating'] = None
-            res['audience_avg_score'] = None
-            res['audience_n_reviews'] = None
-            err_msg = f'RT title and input title are different: ' \
-                      f'{self.normalise_title(self.title)} ' \
-                      f'!= {self.normalise_title(self.movie_name)}'
-            res['error'] = err_msg
-            logger.error(err_msg)
         return res
 

@@ -52,7 +52,7 @@ def main():
     movies_checker.get_new_movies(
         movies_offset_range=(args.first_offset,
                              args.first_offset + args.n_movies),
-        skip_func=m_store.has_rt_data if args.overwrite else m_store.exists,
+        skip_func=m_store.should_not_reprocess if args.overwrite else m_store.exists,
         sort=args.sort,
         stop_on_stale_page=args.stop_on_stale,
         save_func=functools.partial(m_store.add_movie,

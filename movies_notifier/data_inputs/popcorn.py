@@ -148,19 +148,17 @@ class PopcornWithRT:
 
     def add_rt_fields(self, m, overwrite=True):
         if overwrite or 'rotten_tomatoes' not in m:
-            rts = rotten_tomatoes.MovieRatingsScraper(
-                movie_name=m['title'], year=m['year']
-            )
-            ratings  = rts.get_ratings(
+            rts = rotten_tomatoes.MovieRatingsScraper(m['title'], m['year'])
+            rt_data  = rts.get_ratings(
                 raise_error=(self.n_consequtive_fails >= self.number_fails_threshold))
 
-            if not ratings or ratings.get('error'):
+            if not rt_data or rt_data.get('error'):
                 self.n_consequtive_fails += 1
             else:
                 self.n_consequtive_fails = 0
 
-            m.update({'rotten_tomatoes': ratings})
-            logger.info(f"Got {ratings} for {m['title']}")
+            m.update({'rotten_tomatoes': rt_data})
+            logger.info(f"Got {rt_data} for {m['title']}")
 
     def request_delay(self):
         time.sleep(random.randint(*self.request_delay_range))

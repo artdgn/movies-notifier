@@ -29,7 +29,6 @@ class MovieRatingsScraper:
         self.synopsis = None
         self.error = None
 
-
     def get_ratings(self, raise_error=True):
         try:
             self.get_basic_data_from_search()

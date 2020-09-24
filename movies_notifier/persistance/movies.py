@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import time
 
 import pandas as pd
 
@@ -22,6 +23,10 @@ class Movie(dict):
                 self.update(m)
                 return True
 
+    def record_days_age(self):
+        mtime = os.stat(self.json_path(common.MOVIES_DIR)).st_mtime
+        return (time.time() - mtime) / 86400
+
     def rt_data(self):
         return self.get('rotten_tomatoes')
 
@@ -35,17 +40,15 @@ class Movie(dict):
                 return raw
             adjusted = 100 * ((raw * n / 100) + 1) / (n + 2)
             return round(adjusted, precision)
-        except ValueError:
+        except (ValueError, TypeError):
             return score
 
-    def rt_critics_rating(self, min_n_reviews=0, adjust_by_n_reviews=True):
-        if (not self.rt_critics_n_reviews() or
-                self.rt_critics_n_reviews() >= min_n_reviews):
-            if not adjust_by_n_reviews or not self.rt_critics_n_reviews():
-                return self.rt_critics_rating_raw()
-            else:
-                return self.adjust_score(self.rt_critics_rating_raw(),
-                                         self.rt_critics_n_reviews())
+    def rt_critics_rating(self, adjust_by_n_reviews=True):
+        if not adjust_by_n_reviews or not self.rt_critics_n_reviews():
+            return self.rt_critics_rating_raw()
+        else:
+            return self.adjust_score(self.rt_critics_rating_raw(),
+                                     self.rt_critics_n_reviews())
 
     def rt_critics_rating_raw(self):
         return self.get('rotten_tomatoes', {}).get('critics_rating')
@@ -56,14 +59,12 @@ class Movie(dict):
     def rt_critics_n_reviews(self):
         return self.get('rotten_tomatoes', {}).get('critics_n_reviews')
 
-    def rt_audience_rating(self, min_n_reviews=0, adjust_by_n_reviews=True):
-        if (not self.rt_audience_n_reviews() or
-                self.rt_audience_n_reviews() >= min_n_reviews):
-            if not adjust_by_n_reviews or not self.rt_audience_n_reviews():
-                return self.rt_audience_rating_raw()
-            else:
-                return self.adjust_score(self.rt_audience_rating_raw(),
-                                         self.rt_audience_n_reviews())
+    def rt_audience_rating(self, adjust_by_n_reviews=True):
+        if not adjust_by_n_reviews or not self.rt_audience_n_reviews():
+            return self.rt_audience_rating_raw()
+        else:
+            return self.adjust_score(self.rt_audience_rating_raw(),
+                                     self.rt_audience_n_reviews())
 
     def rt_audience_rating_raw(self):
         return self.get('rotten_tomatoes', {}).get('audience_rating')
@@ -73,6 +74,9 @@ class Movie(dict):
 
     def rt_audience_n_reviews(self):
         return self.get('rotten_tomatoes', {}).get('audience_n_reviews')
+
+    def rt_error(self):
+        return self.get('rotten_tomatoes', {}).get('error')
 
     def id(self):
         return self['_id']
@@ -105,12 +109,16 @@ class MoviesStore:
         return os.path.exists(cls.movie_json_path(m))
 
     @classmethod
-    def has_rt_data(cls, m):
+    def should_not_reprocess(cls, m):
         movie = Movie(m)
         if movie.load_from_disk(common.MOVIES_DIR):
-            return (movie.rt_critics_rating() or
-                    movie.rt_audience_rating() or
-                    movie.rt_critics_avg_score())
+            error = movie.rt_error()
+            days_age = movie.record_days_age()
+            has_data = (movie.rt_critics_rating() or
+                        movie.rt_audience_rating() or
+                        movie.rt_critics_avg_score())
+            should_reprocess = days_age > 14 and (error or not has_data)
+            return not should_reprocess
         return False
 
     def save_movies(self, overwrite=False):

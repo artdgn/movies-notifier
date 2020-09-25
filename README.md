@@ -1,4 +1,5 @@
-![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/artdgn/movies-notifier?label=dockerhub&logo=docker)
+![CI](https://github.com/artdgn/movies-notifier/workflows/CI/badge.svg) ![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/artdgn/movies-notifier?label=dockerhub&logo=docker)
+
 # movies-notifier
 ### A simple notifier of new good downloadable movies.
 

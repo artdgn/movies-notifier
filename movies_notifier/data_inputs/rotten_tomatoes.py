@@ -11,9 +11,20 @@ class MovieRatingsScraper:
 
     _base_url = 'https://www.rottentomatoes.com'
 
-    _search_api = _base_url + '/api/private/v2.0/search'
+    # main site, more results, different ordering, may have noise
+    _search_page_url = _base_url + '/search'
+
+    # older, may be deprecated, less results, but returns a JSON
+    _direct_search_api = _base_url + '/api/private/v2.0/search'
+
 
     _audience_api = _base_url + '/napi/audienceScore/'
+
+    class DirectSearchAPIError(Exception):
+        pass
+
+    class SearchPageError(Exception):
+        pass
 
     def __init__(self, movie_name, year):
         self.movie_name = movie_name
@@ -31,8 +42,14 @@ class MovieRatingsScraper:
 
     def get_ratings(self, raise_error=True):
         try:
-            self.get_basic_data_from_search()
+            self.data_from_search_page()
             self.get_ratings_from_rt_url()
+
+        except self.SearchPageError as e:
+            logger.error(f'search page error: {str(e)}, trying direct search instead')
+            self.data_from_direct_search_api()
+            self.get_ratings_from_rt_url()
+
         except Exception as e:
             if raise_error:
                 logger.error(f'Raising and failing because raise_error={raise_error}')
@@ -42,29 +59,51 @@ class MovieRatingsScraper:
                 self.error = str(e)
         return self.format_results()
 
-    def get_basic_data_from_search(self):
-        resp = requests.get(self._search_api,
-                            params={'q': self.movie_name})
+    def data_from_direct_search_api(self):
+        resp = requests.get(self._direct_search_api, params={'q': self.movie_name})
+        if not resp.ok:
+            raise self.DirectSearchAPIError(f'direct search API returned {resp.status_code}')
+
         data = resp.json()
-        movies_data = data.get('movies')
-        if not movies_data:
-            raise RuntimeError(f'RT search returned no movies for {self.movie_name}')
+        movies = data.get('movies', [])
 
-        movie_data = self._select_movie_search_result(movies_data)
+        if not movies:
+            raise self.DirectSearchAPIError('no movies found in direct search API results')
 
-        # get the data
-        self.rt_title = movie_data['name']
-        self.rt_url = f"{self._base_url}{movie_data['url']}"
-        self.critics_rating = movie_data.get('meterScore', '')
-
-    def _select_movie_search_result(self, movies):
         for movie in movies:
             year_gap = abs(int(movie['year']) - int(self.year))
             if year_gap <= 1:
-                return movie
+                self.rt_title = movie['name']
+                self.rt_url = f"{self._base_url}{movie['url']}"
+                self.critics_rating = movie.get('meterScore', '')
+                break
         else:
-            raise RuntimeError(f'no movie found in results ({len(movies)}) '
-                               f'within 1 year from {self.year}')
+            self.DirectSearchAPIError(f'no movie within 1 year from {self.year} in '
+                                      f'{len(movies)} direct search API results')
+
+    def data_from_search_page(self):
+        resp = requests.get(self._search_page_url, params={'search': self.movie_name})
+        if not resp.ok:
+            raise self.SearchPageError(f'search page returned {resp.status_code}')
+
+        sel = Selector(text=resp.text)
+        data = json.loads(sel.css('#movies-json::text').extract_first())
+        movies = data.get('items', []) if data else []
+
+        if not movies:
+            raise self.SearchPageError('no movies found in search page results')
+
+        for movie in movies:
+            year_gap = abs(int(movie['releaseYear']) - int(self.year))
+            if year_gap <= 1:
+                self.rt_title = movie['name']
+                self.rt_url = movie['url']
+                self.critics_rating = movie.get('tomatometerScore', {}).get('score')
+                self.audience_rating = movie.get('audienceScore', {}).get('score')
+                break
+        else:
+            raise self.SearchPageError((f'no movie within 1 year from {self.year} in '
+                                        f'{len(movies)} search page results'))
 
     def get_ratings_from_rt_url(self):
         resp = requests.get(self.rt_url)
@@ -102,7 +141,8 @@ class MovieRatingsScraper:
         self.synopsis = sel.css('#movieSynopsis::text').extract_first() or ''
         self.synopsis = self.synopsis.strip()
 
-    def _get_full_critics_data(self, resp):
+    @staticmethod
+    def _get_full_critics_data(resp):
         try:
             si_str = 'root.RottenTomatoes.context.scoreInfo'
             return json.loads(re.findall(f'{si_str} = (.*);', resp.text)[0])
@@ -138,4 +178,3 @@ class MovieRatingsScraper:
             res['error'] = self.error
 
         return res
-

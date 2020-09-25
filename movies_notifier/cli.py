@@ -47,7 +47,7 @@ def main():
 
     m_store = MoviesStore()
 
-    movies_checker = PopcornWithRT()
+    movies_checker = PopcornWithRT(number_fails_threshold=20 if args.overwrite else 5)
 
     movies_checker.get_new_movies(
         movies_offset_range=(args.first_offset,

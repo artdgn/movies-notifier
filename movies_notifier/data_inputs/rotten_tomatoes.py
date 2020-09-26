@@ -15,8 +15,7 @@ class MovieRatingsScraper:
     _search_page_url = _base_url + '/search'
 
     # older, may be deprecated, less results, but returns a JSON
-    _direct_search_api = _base_url + '/api/private/v2.0/search'
-
+    _direct_search_api_url = _base_url + '/api/private/v2.0/search'
 
     _audience_api = _base_url + '/napi/audienceScore/'
 
@@ -42,14 +41,8 @@ class MovieRatingsScraper:
 
     def get_ratings(self, raise_error=True):
         try:
-            self.data_from_search_page()
+            self.get_data_from_search()
             self.get_ratings_from_rt_url()
-
-        except self.SearchPageError as e:
-            logger.error(f'search page error: {str(e)}, trying direct search instead')
-            self.data_from_direct_search_api()
-            self.get_ratings_from_rt_url()
-
         except Exception as e:
             if raise_error:
                 logger.error(f'Raising and failing because raise_error={raise_error}')
@@ -59,8 +52,16 @@ class MovieRatingsScraper:
                 self.error = str(e)
         return self.format_results()
 
-    def data_from_direct_search_api(self):
-        resp = requests.get(self._direct_search_api, params={'q': self.movie_name})
+    def get_data_from_search(self):
+        try:
+            self.scrape_search_page()
+        except self.SearchPageError as e:
+            logger.error(f'search page error: {str(e)} for {self.movie_name}, '
+                         f'trying direct search instead')
+            self.direct_search_api()
+
+    def direct_search_api(self):
+        resp = requests.get(self._direct_search_api_url, params={'q': self.movie_name})
         if not resp.ok:
             raise self.DirectSearchAPIError(f'direct search API returned {resp.status_code}')
 
@@ -68,7 +69,8 @@ class MovieRatingsScraper:
         movies = data.get('movies', [])
 
         if not movies:
-            raise self.DirectSearchAPIError('no movies found in direct search API results')
+            raise self.DirectSearchAPIError(f'no movies found in direct search API results '
+                                            f'for {self.movie_name}')
 
         for movie in movies:
             year_gap = abs(int(movie['year']) - int(self.year))
@@ -79,9 +81,10 @@ class MovieRatingsScraper:
                 break
         else:
             self.DirectSearchAPIError(f'no movie within 1 year from {self.year} in '
-                                      f'{len(movies)} direct search API results')
+                                      f'{len(movies)} direct search API results '
+                                      f'for {self.movie_name}')
 
-    def data_from_search_page(self):
+    def scrape_search_page(self):
         resp = requests.get(self._search_page_url, params={'search': self.movie_name})
         if not resp.ok:
             raise self.SearchPageError(f'search page returned {resp.status_code}')
@@ -91,7 +94,8 @@ class MovieRatingsScraper:
         movies = data.get('items', []) if data else []
 
         if not movies:
-            raise self.SearchPageError('no movies found in search page results')
+            raise self.SearchPageError(f'no movies found in search page results '
+                                       f'for {self.movie_name}')
 
         for movie in movies:
             year_gap = abs(int(movie['releaseYear']) - int(self.year))
@@ -103,7 +107,8 @@ class MovieRatingsScraper:
                 break
         else:
             raise self.SearchPageError((f'no movie within 1 year from {self.year} in '
-                                        f'{len(movies)} search page results'))
+                                        f'{len(movies)} search page results '
+                                        f'for {self.movie_name}'))
 
     def get_ratings_from_rt_url(self):
         resp = requests.get(self.rt_url)

@@ -79,3 +79,9 @@ class TestRT:
 
         with pytest.raises(sut.DirectSearchAPIError):
             sut.get_ratings(raise_error=True)
+
+    def test_get_ratings_non_json_javascript_data(self):
+        name = 'The Many Lives of Nick Buoniconti'
+        sut = self.rt_cls(name, 2019)
+        res = sut.get_ratings()
+        assert 'error' not in res

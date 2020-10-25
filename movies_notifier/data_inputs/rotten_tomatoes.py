@@ -90,7 +90,8 @@ class MovieRatingsScraper:
             raise self.SearchPageError(f'search page returned {resp.status_code}')
 
         sel = Selector(text=resp.text)
-        data = json.loads(sel.css('#movies-json::text').extract_first())
+        js_data = sel.css('#movies-json::text').extract_first()
+        data = json.loads(js_data.replace('underfined', 'null'))
         movies = data.get('items', []) if data else []
 
         if not movies:
@@ -150,7 +151,8 @@ class MovieRatingsScraper:
     def _get_full_critics_data(resp):
         try:
             si_str = 'root.RottenTomatoes.context.scoreInfo'
-            return json.loads(re.findall(f'{si_str} = (.*);', resp.text)[0])
+            js_data = re.findall(f'{si_str} = (.*);', resp.text)[0]
+            return json.loads(js_data.replace('undefined', 'null'))
         except (json.decoder.JSONDecodeError, TypeError, IndexError):
             logger.error('failed getting structured critics score data')
             return {}
@@ -158,12 +160,10 @@ class MovieRatingsScraper:
     def _get_full_audience_data(self, resp):
         try:
             fd_str = 'root.RottenTomatoes.context.fandangoData'
-            fd_dict = json.loads(re.findall(f'{fd_str} = (.*);', resp.text)[0])
-            if fd_dict.get('emsId'):
-                resp_aud = requests.get(self._audience_api + fd_dict['emsId'])
-                return resp_aud.json()
-            else:
-                return {}
+            js_data = re.findall(f'{fd_str} = (.*);', resp.text)[0]
+            ems_id = re.findall(r'emsId":"(.*?)"', js_data)[0]
+            resp_aud = requests.get(self._audience_api + ems_id)
+            return resp_aud.json()
         except (IndexError, AttributeError, TypeError):
             return {}
 

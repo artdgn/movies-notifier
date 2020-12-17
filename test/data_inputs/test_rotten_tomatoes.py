@@ -85,3 +85,20 @@ class TestRT:
         sut = self.rt_cls(name, 2019)
         res = sut.get_ratings()
         assert 'error' not in res
+
+    def test_get_ratings_insufficient_title_match(self):
+        # search-page has bad results, exact match in direct search
+        sut = self.rt_cls('One Glorious Sunset', 2020)
+        _ = sut.get_ratings()
+        assert sut.rt_title == sut.movie_name
+
+        # not found
+        with pytest.raises(sut.DirectSearchAPIError):
+            # also "Camp Blood 8: Revelations"
+            self.rt_cls('Hooligan Escape The Russian Job', 2018).get_ratings()
+
+        # insufficient matches
+        with pytest.raises(sut.DirectSearchAPIError):
+            self.rt_cls('Portrait of Animal Behavior', 2020).get_ratings()
+
+

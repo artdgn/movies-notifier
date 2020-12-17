@@ -19,6 +19,8 @@ class MovieRatingsScraper:
 
     _audience_api = _base_url + '/napi/audienceScore/'
 
+    _allowed_missing_words = r'the|and'
+
     class DirectSearchAPIError(Exception):
         pass
 
@@ -78,9 +80,9 @@ class MovieRatingsScraper:
                 self.rt_title = movie['name']
                 self.rt_url = f"{self._base_url}{movie['url']}"
                 self.critics_rating = movie.get('meterScore', '')
-                break
-        else:
-            self.DirectSearchAPIError(f'no movie within 1 year from {self.year} in '
+                return
+
+        raise self.DirectSearchAPIError(f'no movie within 1 year from {self.year} in '
                                       f'{len(movies)} direct search API results '
                                       f'for {self.movie_name}')
 
@@ -101,15 +103,39 @@ class MovieRatingsScraper:
         for movie in movies:
             year_gap = abs(int(movie['releaseYear']) - int(self.year))
             if year_gap <= 1:
-                self.rt_title = movie['name']
-                self.rt_url = movie['url']
-                self.critics_rating = movie.get('tomatometerScore', {}).get('score')
-                self.audience_rating = movie.get('audienceScore', {}).get('score')
-                break
-        else:
-            raise self.SearchPageError((f'no movie within 1 year from {self.year} in '
-                                        f'{len(movies)} search page results '
-                                        f'for {self.movie_name}'))
+                if self._title_match(movie['name']):
+                    self.rt_title = movie['name']
+                    self.rt_url = movie['url']
+                    self.critics_rating = movie.get('tomatometerScore', {}).get('score')
+                    self.audience_rating = movie.get('audienceScore', {}).get('score')
+                    return
+                else:
+                    logger.warning(f"skipping insufficient title match: "
+                                   f"'{movie['name']}' for '{self.movie_name}'")
+
+        raise self.SearchPageError((f'no movie within 1 year from {self.year} in '
+                                    f'{len(movies)} search page results '
+                                    f'for {self.movie_name}'))
+
+    @classmethod
+    def normalise_title(cls, s):
+        s = re.sub(r'[^\w\s]', '', str(s).lower())
+        s = re.sub(cls._allowed_missing_words, '', s)
+        return ' '.join(s.split())
+
+    def _title_match(self, candidate, min_score = 0.75):
+        target = self.normalise_title(self.movie_name)
+        candidate = self.normalise_title(candidate)
+
+        target_parts = target.split()
+        candidate_parts = candidate.split()
+
+        if not target_parts or not candidate_parts:
+            return 0
+
+        score_cand_match = sum([w in target for w in candidate_parts]) / len(candidate_parts)
+        score_target_match = sum([w in candidate for w in target_parts]) / len(target_parts)
+        return score_cand_match >= min_score or score_target_match >= min_score
 
     def get_ratings_from_rt_url(self):
         resp = requests.get(self.rt_url)

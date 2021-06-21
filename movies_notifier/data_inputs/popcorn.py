@@ -11,8 +11,6 @@ from movies_notifier.data_inputs import rotten_tomatoes
 
 class PopcornWithRT:
 
-    POPCORN_API_URI = "https://movies-v2.api-fetch.sh"
-
     N_MOVIES_PAGE = 50
 
     sort_map = {'l': 'last added',
@@ -21,6 +19,8 @@ class PopcornWithRT:
                 'y': 'year',
                 'r': 'rating',
                 }
+
+    _dom = '706f70636f726e2d72752e746b'
 
     def __init__(self,
                  request_delay_range='61-120',
@@ -57,8 +57,9 @@ class PopcornWithRT:
 
     @classmethod
     def get_popcorn_movies(cls, page, sort='last added'):
-        resp = requests.get(f'{cls.POPCORN_API_URI}/movies/{page}',
-                              params={'sort': cls._sort_param(sort), 'order': -1})
+        dom = bytes.fromhex(cls._dom).decode()
+        resp = requests.get(f'https://{dom}/movies/{page}',
+                            params={'sort': cls._sort_param(sort), 'order': -1})
         if resp.ok:
             logger.info(f'Got page {page} from Popcorn for '
                         f'sort={cls._sort_param(sort)}')
@@ -97,11 +98,11 @@ class PopcornWithRT:
         logger.info(f'Got {len(new_movies)} new movies from popcorn API')
 
     def _new_movies_for_sort(self,
-                            movies_offset_range = (1, 100),
-                            skip_func=None,
-                            sort='l',
-                            stop_on_stale_page=True,
-                            save_func=None):
+                             movies_offset_range = (1, 100),
+                             skip_func=None,
+                             sort='l',
+                             stop_on_stale_page=True,
+                             save_func=None):
 
         new_movies = {}  # using dict for deduplication as API sometimes returns duplicates
 

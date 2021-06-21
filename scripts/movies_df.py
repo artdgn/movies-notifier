@@ -1,9 +1,9 @@
 import pandas as pd
 
-from movies_notifier.util import pandas_utils
+from movies_notifier.config import common
 from movies_notifier.persistance.movies import MoviesStore
 
-pandas_utils.console_settings()
+common.console_settings()
 
 m_store = MoviesStore()
 

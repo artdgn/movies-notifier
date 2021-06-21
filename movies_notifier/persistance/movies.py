@@ -6,7 +6,6 @@ import time
 import pandas as pd
 
 from movies_notifier.config import common
-from movies_notifier.util import pandas_utils
 from movies_notifier.util.logger import logger
 
 
@@ -160,8 +159,10 @@ class MoviesStore:
         df = pd.DataFrame(movie_list)
 
         # expand rt data
-        df['rotten_tomatoes'] = df['rotten_tomatoes'].apply(json.dumps)
-        df = pandas_utils.split_json_field(df, 'rotten_tomatoes')
+        df = pd.concat([
+            df.drop(columns=['rotten_tomatoes']).reset_index(drop=True),
+            pd.json_normalize(df['rotten_tomatoes'])
+        ], axis=1)
         df = df.iloc[:, ~df.columns.duplicated()]  # json split creates duplicate title
 
         # process numeric

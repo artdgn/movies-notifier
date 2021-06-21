@@ -140,22 +140,29 @@ class MovieRatingsScraper:
     def get_ratings_from_rt_url(self):
         resp = requests.get(self.rt_url)
         self._scrape_rt_response(resp)
+        if not self.critics_rating:
+            # let's try the direct search because the RT page couldn't be scraped
+            # for critics rating
+            try:
+                self.direct_search_api()
+            except self.DirectSearchAPIError as e:
+                logger.error(f"failed getting data from direct-search "
+                             f"after failing scraping. {e}")
 
     def _scrape_rt_response(self, resp):
         sel = Selector(text=resp.text)
 
-        self.critics_data = self._get_full_critics_data(resp)
-        self.critics_rating = self.critics_data.get(
-            'tomatometerAllCritics', {}).get('score', self.critics_rating or '')
-        self.critics_avg_score = self.critics_data.get(
-            'tomatometerAllCritics', {}).get('averageRating', '')
-        self.critics_n_reviews = self.critics_data.get(
-            'tomatometerAllCritics', {}).get('ratingCount', '')
+        self.critics_rating = sel.css('score-board').attrib.get('tomatometerscore', '')
+        self.critics_n_reviews = (sel
+                                  .css('.scoreboard__link--tomatometer::text')
+                                  .extract_first() or '').replace(" Reviews", '')
+        ## backup audience data
+        # sel.css('score-board').attrib['audiencescore']
+        # sel.css('.scoreboard__link--audience::text').extract_first()
 
-        if not self.critics_rating:  # try css
-            self.critics_rating = sel.css(
-                '#tomato_meter_link .mop-ratings-wrap__percentage::text').extract_first() or ''
-            self.critics_rating = self.critics_rating.strip()[:-1]
+        self.critics_rating = sel.css(
+            'span[data-qa="tomatometer"]::text').extract_first() or ''
+        self.critics_rating = self.critics_rating.strip()[:-1]
 
         self.audience_data = self._get_full_audience_data(resp)
         self.audience_rating = self.audience_data.get(
@@ -166,22 +173,14 @@ class MovieRatingsScraper:
             'audienceScoreAll', {}).get('ratingCount', '')
 
         self.rt_title = (self.rt_title or
-                         sel.css('.mop-ratings-wrap__title--top::text').extract_first())
-        self.rt_title = self.rt_title.strip()
+                         sel
+                         .css('.scoreboard__title::text')
+                         .extract_first() or
+                         '').strip()
 
         # synopsis
         self.synopsis = sel.css('#movieSynopsis::text').extract_first() or ''
         self.synopsis = self.synopsis.strip()
-
-    @staticmethod
-    def _get_full_critics_data(resp):
-        try:
-            si_str = 'root.RottenTomatoes.context.scoreInfo'
-            js_data = re.findall(f'{si_str} = (.*);', resp.text)[0]
-            return json.loads(js_data.replace('undefined', 'null'))
-        except (json.decoder.JSONDecodeError, TypeError, IndexError):
-            logger.error('failed getting structured critics score data')
-            return {}
 
     def _get_full_audience_data(self, resp):
         try:

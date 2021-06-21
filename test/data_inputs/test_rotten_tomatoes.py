@@ -24,10 +24,8 @@ class TestRT:
         sut.get_ratings_from_rt_url()
 
         assert sut.critics_rating
-        assert sut.critics_avg_score
         assert sut.critics_n_reviews
         assert sut.audience_rating
-        assert sut.audience_avg_score
         assert sut.audience_n_reviews
         assert sut.rt_title
         assert sut.synopsis
@@ -57,18 +55,16 @@ class TestRT:
         if expect_rating:
             assert sut.critics_rating
 
-    def test_get_ratings(self):
+    def test_get_ratings_simple(self):
         name = 'Thank You for Smoking'
         sut = self.rt_cls(name, 2006)
         res = sut.get_ratings()
 
-        assert res['rt_url'] == 'https://rottentomatoes.com/m/thank_you_for_smoking'
+        assert res['rt_url'] == 'https://www.rottentomatoes.com/m/thank_you_for_smoking'
         assert res['title'] == name
         assert res['critics_rating']
-        assert res['critics_avg_score']
         assert res['critics_n_reviews']
         assert res['audience_rating']
-        assert res['audience_avg_score']
         assert res['audience_n_reviews']
 
     def test_get_ratings_errors(self):

@@ -10,7 +10,6 @@ from movies_notifier.data_inputs import rotten_tomatoes
 
 
 class PopcornWithRT:
-
     N_MOVIES_PAGE = 50
 
     sort_map = {'l': 'last added',
@@ -76,12 +75,14 @@ class PopcornWithRT:
             'scrape_date': CURRENT_DATE,
             'scrape_page': page,
             'scrape_index_on_page': index,
-            'magnet_1080p': m['torrents'].get('en', {}).get('1080p', {}).get('url'),
-            'magnet_720p': m['torrents'].get('en', {}).get('720p', {}).get('url')
         })
 
+        if isinstance(m['torrents'], dict):  # different schema sometimes
+            for res, data in m['torrents'].get('en', {}).items():
+                m[f'magnet_{res}'] = data.get('url')
+
     def get_new_movies(self,
-                       movies_offset_range = (1, 100),
+                       movies_offset_range=(1, 100),
                        skip_func=None,
                        sort='l',
                        stop_on_stale_page=True,
@@ -98,7 +99,7 @@ class PopcornWithRT:
         logger.info(f'Got {len(new_movies)} new movies from popcorn API')
 
     def _new_movies_for_sort(self,
-                             movies_offset_range = (1, 100),
+                             movies_offset_range=(1, 100),
                              skip_func=None,
                              sort='l',
                              stop_on_stale_page=True,
@@ -110,7 +111,8 @@ class PopcornWithRT:
         end_page = math.ceil(movies_offset_range[1] / self.N_MOVIES_PAGE)
 
         in_offset_range = lambda i, j: \
-            movies_offset_range[0] <= ((i - 1) * self.N_MOVIES_PAGE + j + 1) <= movies_offset_range[1]
+            movies_offset_range[0] <= ((i - 1) * self.N_MOVIES_PAGE + j + 1) <= \
+            movies_offset_range[1]
 
         for i in range(start_page, end_page + 1):
 
@@ -150,7 +152,7 @@ class PopcornWithRT:
     def add_rt_fields(self, m, overwrite=True):
         if overwrite or 'rotten_tomatoes' not in m:
             rts = rotten_tomatoes.MovieRatingsScraper(m['title'], m['year'])
-            rt_data  = rts.get_ratings(
+            rt_data = rts.get_ratings(
                 raise_error=(self.n_consequtive_fails >= self.number_fails_threshold))
 
             if not rt_data or rt_data.get('error'):
@@ -163,7 +165,3 @@ class PopcornWithRT:
 
     def request_delay(self):
         time.sleep(random.randint(*self.request_delay_range))
-
-
-
-

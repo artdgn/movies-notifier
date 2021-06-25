@@ -26,11 +26,14 @@ def parse_args():
                              "other options: 'l' (last added), 't' (trending), 'p' (popularity) "
                              "or any mix of those.")
 
-    parser.add_argument("-ss", "--stop-on-stale", action="store_true",
+    parser.add_argument("-S", "--stop-on-stale", action="store_true",
                         help="stop scanning popcorn results if one full page is stale")
 
     parser.add_argument("-o", "--overwrite", action="store_true",
                         help="whether to rescrape and overwrite files with no RT data")
+
+    parser.add_argument("-F", "--fails-threshold", type=int, required=False, default=10,
+                        help="number of consecutive fails after which to stop")
 
     parser.add_argument("-e", "--email", action="store_true",
                         help="notify by email (use if you have email notifier set up)")
@@ -47,7 +50,7 @@ def main():
 
     m_store = MoviesStore()
 
-    movies_checker = PopcornWithRT(number_fails_threshold=20 if args.overwrite else 5)
+    movies_checker = PopcornWithRT(number_fails_threshold=args.fails_threshold)
 
     movies_checker.get_new_movies(
         movies_offset_range=(args.first_offset,

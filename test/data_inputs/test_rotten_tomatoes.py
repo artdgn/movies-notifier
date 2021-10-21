@@ -38,23 +38,22 @@ class TestRT:
         assert sut.rt_title == name
         assert sut.critics_rating
 
-    # TODO: fix scraping search results
-    # @pytest.mark.parametrize('name, year, expected_url, expect_rating', [
-    #     ('red',
-    #      2010,
-    #      'https://rottentomatoes.com/m/red',
-    #      True),
-    #     ("Edgar Allen Poe's Ligeia",
-    #      2009,
-    #      'https://rottentomatoes.com/m/edgar_allan_poes_mystery_theatre',
-    #      False),
-    # ])
-    # def test_scrape_search_page_simple(self, name, year, expected_url, expect_rating):
-    #     sut = self.rt_cls(name, year)
-    #     sut.scrape_search_page()
-    #     assert sut.rt_url == expected_url
-    #     if expect_rating:
-    #         assert sut.critics_rating
+    @pytest.mark.parametrize('name, year, expected_url, expect_rating', [
+        ('red',
+         2010,
+         'https://www.rottentomatoes.com/m/red',
+         True),
+        ("Edgar Allen Poe's Ligeia",
+         2009,
+         'https://www.rottentomatoes.com/m/edgar_allan_poes_mystery_theatre',
+         False),
+    ])
+    def test_scrape_search_page_simple(self, name, year, expected_url, expect_rating):
+        sut = self.rt_cls(name, year)
+        sut.scrape_search_page()
+        assert sut.rt_url == expected_url
+        if expect_rating:
+            assert sut.critics_rating
 
     def test_get_ratings_simple(self):
         name = 'Thank You for Smoking'

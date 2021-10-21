@@ -55,13 +55,12 @@ class MovieRatingsScraper:
         return self.format_results()
 
     def get_data_from_search(self):
-        # TODO: fix scraping search page
-        # try:
-        #     self.scrape_search_page()
-        # except self.SearchPageError as e:
-        #     logger.error(f'search page error: {str(e)} for {self.movie_name}, '
-        #                  f'trying direct search instead')
-        self.direct_search_api()
+        try:
+            self.scrape_search_page()
+        except self.SearchPageError as e:
+            logger.error(f'search page error: {str(e)} for {self.movie_name}, '
+                         f'trying direct search instead')
+            self.direct_search_api()
 
     def direct_search_api(self):
         resp = requests.get(self._direct_search_api_url, params={'q': self.movie_name})
@@ -87,37 +86,32 @@ class MovieRatingsScraper:
                                       f'{len(movies)} direct search API results '
                                       f'for {self.movie_name}')
 
-    # TODO: fix scraping search page
-    # def scrape_search_page(self):
-    #     resp = requests.get(self._search_page_url, params={'search': self.movie_name})
-    #     if not resp.ok:
-    #         raise self.SearchPageError(f'search page returned {resp.status_code}')
-    #
-    #     sel = Selector(text=resp.text)
-    #     js_data = sel.css('#movies-json::text').extract_first()
-    #     data = json.loads(js_data.replace('underfined', 'null'))
-    #     movies = data.get('items', []) if data else []
-    #
-    #     if not movies:
-    #         raise self.SearchPageError(f'no movies found in search page results '
-    #                                    f'for {self.movie_name}')
-    #
-    #     for movie in movies:
-    #         year_gap = abs(int(movie['releaseYear']) - int(self.year))
-    #         if year_gap <= 1:
-    #             if self._title_match(movie['name']):
-    #                 self.rt_title = movie['name']
-    #                 self.rt_url = movie['url']
-    #                 self.critics_rating = movie.get('tomatometerScore', {}).get('score')
-    #                 self.audience_rating = movie.get('audienceScore', {}).get('score')
-    #                 return
-    #             else:
-    #                 logger.warning(f"skipping insufficient title match: "
-    #                                f"'{movie['name']}' for '{self.movie_name}'")
-    #
-    #     raise self.SearchPageError((f'no movie within 1 year from {self.year} in '
-    #                                 f'{len(movies)} search page results '
-    #                                 f'for {self.movie_name}'))
+    def scrape_search_page(self):
+        resp = requests.get(self._search_page_url, params={'search': self.movie_name})
+        if not resp.ok:
+            raise self.SearchPageError(f'search page returned {resp.status_code}')
+
+        sel = Selector(text=resp.text)
+
+        # https://parsel.readthedocs.io/en/latest/usage.html#examples
+        movie_nodes = sel.xpath('//search-page-media-row')
+        for node in movie_nodes:
+            year_str = node.attrib.get('releaseyear')
+            if year_str.strip() and (abs(int(year_str) - int(self.year)) <= 1):
+                title_node = node.xpath('./a[contains(@slot, "title")]')[0]
+                title = title_node.xpath('text()').get().strip()
+                if self._title_match(title):
+                    self.rt_title = title
+                    self.rt_url = title_node.attrib.get('href', '')
+                    self.critics_rating = node.attrib.get('tomatometerscore')
+                    return
+                else:
+                    logger.warning(f"skipping insufficient title match: "
+                                   f"'{title}' for '{self.movie_name}'")
+
+        raise self.SearchPageError((f'no movie within 1 year from {self.year} in '
+                                    f'{len(movie_nodes)} search page results '
+                                    f'for {self.movie_name}'))
 
     @classmethod
     def normalise_title(cls, s):

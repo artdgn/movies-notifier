@@ -55,12 +55,13 @@ class MovieRatingsScraper:
         return self.format_results()
 
     def get_data_from_search(self):
-        try:
-            self.scrape_search_page()
-        except self.SearchPageError as e:
-            logger.error(f'search page error: {str(e)} for {self.movie_name}, '
-                         f'trying direct search instead')
-            self.direct_search_api()
+        # TODO: fix scraping search page
+        # try:
+        #     self.scrape_search_page()
+        # except self.SearchPageError as e:
+        #     logger.error(f'search page error: {str(e)} for {self.movie_name}, '
+        #                  f'trying direct search instead')
+        self.direct_search_api()
 
     def direct_search_api(self):
         resp = requests.get(self._direct_search_api_url, params={'q': self.movie_name})
@@ -86,36 +87,37 @@ class MovieRatingsScraper:
                                       f'{len(movies)} direct search API results '
                                       f'for {self.movie_name}')
 
-    def scrape_search_page(self):
-        resp = requests.get(self._search_page_url, params={'search': self.movie_name})
-        if not resp.ok:
-            raise self.SearchPageError(f'search page returned {resp.status_code}')
-
-        sel = Selector(text=resp.text)
-        js_data = sel.css('#movies-json::text').extract_first()
-        data = json.loads(js_data.replace('underfined', 'null'))
-        movies = data.get('items', []) if data else []
-
-        if not movies:
-            raise self.SearchPageError(f'no movies found in search page results '
-                                       f'for {self.movie_name}')
-
-        for movie in movies:
-            year_gap = abs(int(movie['releaseYear']) - int(self.year))
-            if year_gap <= 1:
-                if self._title_match(movie['name']):
-                    self.rt_title = movie['name']
-                    self.rt_url = movie['url']
-                    self.critics_rating = movie.get('tomatometerScore', {}).get('score')
-                    self.audience_rating = movie.get('audienceScore', {}).get('score')
-                    return
-                else:
-                    logger.warning(f"skipping insufficient title match: "
-                                   f"'{movie['name']}' for '{self.movie_name}'")
-
-        raise self.SearchPageError((f'no movie within 1 year from {self.year} in '
-                                    f'{len(movies)} search page results '
-                                    f'for {self.movie_name}'))
+    # TODO: fix scraping search page
+    # def scrape_search_page(self):
+    #     resp = requests.get(self._search_page_url, params={'search': self.movie_name})
+    #     if not resp.ok:
+    #         raise self.SearchPageError(f'search page returned {resp.status_code}')
+    #
+    #     sel = Selector(text=resp.text)
+    #     js_data = sel.css('#movies-json::text').extract_first()
+    #     data = json.loads(js_data.replace('underfined', 'null'))
+    #     movies = data.get('items', []) if data else []
+    #
+    #     if not movies:
+    #         raise self.SearchPageError(f'no movies found in search page results '
+    #                                    f'for {self.movie_name}')
+    #
+    #     for movie in movies:
+    #         year_gap = abs(int(movie['releaseYear']) - int(self.year))
+    #         if year_gap <= 1:
+    #             if self._title_match(movie['name']):
+    #                 self.rt_title = movie['name']
+    #                 self.rt_url = movie['url']
+    #                 self.critics_rating = movie.get('tomatometerScore', {}).get('score')
+    #                 self.audience_rating = movie.get('audienceScore', {}).get('score')
+    #                 return
+    #             else:
+    #                 logger.warning(f"skipping insufficient title match: "
+    #                                f"'{movie['name']}' for '{self.movie_name}'")
+    #
+    #     raise self.SearchPageError((f'no movie within 1 year from {self.year} in '
+    #                                 f'{len(movies)} search page results '
+    #                                 f'for {self.movie_name}'))
 
     @classmethod
     def normalise_title(cls, s):
@@ -156,21 +158,25 @@ class MovieRatingsScraper:
         self.critics_n_reviews = (sel
                                   .css('.scoreboard__link--tomatometer::text')
                                   .extract_first() or '').replace(" Reviews", '')
-        ## backup audience data
-        # sel.css('score-board').attrib['audiencescore']
-        # sel.css('.scoreboard__link--audience::text').extract_first()
 
-        self.critics_rating = sel.css(
+        self.critics_rating = self.critics_rating or sel.css(
             'span[data-qa="tomatometer"]::text').extract_first() or ''
         self.critics_rating = self.critics_rating.strip()[:-1]
 
+        ## backup audience data
+        self.audience_rating = sel.css('score-board').attrib['audiencescore']
+        audience_n_reviews_str = sel.css('.scoreboard__link--audience::text').extract_first()
+        if audience_n_reviews_str :
+            self.audience_n_reviews = ''.join(re.findall(r'\d+', audience_n_reviews_str))
+
         self.audience_data = self._get_full_audience_data(resp)
-        self.audience_rating = self.audience_data.get(
-            'audienceScoreAll', {}).get('score', '')
-        self.audience_avg_score = self.audience_data.get(
-            'audienceScoreAll', {}).get('averageRating', '')
-        self.audience_n_reviews = self.audience_data.get(
-            'audienceScoreAll', {}).get('ratingCount', '')
+        if self.audience_data:
+            self.audience_rating = self.audience_rating or self.audience_data.get(
+                'audienceScoreAll', {}).get('score', '')
+            self.audience_avg_score = self.audience_data.get(
+                'audienceScoreAll', {}).get('averageRating', '')
+            self.audience_n_reviews = self.audience_n_reviews or self.audience_data.get(
+                'audienceScoreAll', {}).get('ratingCount', '')
 
         self.rt_title = (self.rt_title or
                          sel
